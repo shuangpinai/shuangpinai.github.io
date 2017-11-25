@@ -1,1 +1,401 @@
-<!DOCTYPE html><html class="theme-next mist use-motion" lang="zh-CN"><header id="header" class="header" itemscope itemtype="//schema.org/WPHeader"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="theme-color" content="#222"><script></script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"><link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css"><link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3"><link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222"><meta name="keywords" content="eventbus,"><meta name="description" content="1.什么是EventBus根据官方介绍，eventbus是一个通过分布/观察者模式实现的消息总线，支持不同线程的调用，能极大的降低代码的耦合度。"><meta name="keywords" content="eventbus"><meta property="og:type" content="article"><meta property="og:title" content="EventBus3.0源码分析"><meta property="og:url" content="http://lebens.top/EventBus3.0源码分析20171123/index.html"><meta property="og:site_name" content="Lebens"><meta property="og:description" content="1.什么是EventBus根据官方介绍，eventbus是一个通过分布/观察者模式实现的消息总线，支持不同线程的调用，能极大的降低代码的耦合度。"><meta property="og:locale" content="zh-CN"><meta property="og:image" content="http://lebens.top/images/EventBus源码分析/EventBus-Publish-Subscribe.png"><meta property="og:updated_time" content="2017-11-23T15:01:39.517Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="EventBus3.0源码分析"><meta name="twitter:description" content="1.什么是EventBus根据官方介绍，eventbus是一个通过分布/观察者模式实现的消息总线，支持不同线程的调用，能极大的降低代码的耦合度。"><meta name="twitter:image" content="http://lebens.top/images/EventBus源码分析/EventBus-Publish-Subscribe.png"><script type="text/javascript" id="hexo.configurations">var NexT=window.NexT||{},CONFIG={root:"/",scheme:"Mist",version:"5.1.3",sidebar:{position:"left",display:"post",offset:12,b2t:!1,scrollpercent:!1,onmobile:!1},fancybox:!0,tabs:!0,motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"slideDownIn",post_body:"slideDownIn",coll_header:"slideLeftIn",sidebar:"slideUpIn"}},duoshuo:{userId:"0",author:"博主"},algolia:{applicationID:"",apiKey:"",indexName:"",hits:{per_page:10},labels:{input_placeholder:"Search for Posts",hits_empty:"We didn't find any results for the search: ${query}",hits_stats:"${hits} results found in ${time} ms"}}}</script><link rel="canonical" href="http://lebens.top/EventBus3.0源码分析20171123/"><title>EventBus3.0源码分析 | Lebens</title><style>.forkme{display:none}@media (min-width:768px){.forkme{display:inline}}</style></head><body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN"><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="forkme"><a target="_blank" href="https://github.com/shuangpinai"><img style="position:absolute;top:0;left:0;border:0" src="https://camo.githubusercontent.com/567c3a48d796e2fc06ea80409cc9dd82bf714434/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"></a></div><header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-wrapper"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Lebens</span> <span class="logo-line-after"><i></i></span></a></div><p class="site-subtitle"></p></div><div class="site-nav-toggle"><button><span class="btn-bar"></span> <span class="btn-bar"></span> <span class="btn-bar"></span></button></div></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br>主页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i><br>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br>日志</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于我</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class="site-search"><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class="search-icon"><i class="fa fa-search"></i> </span><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span><div class="local-search-input-wrapper"><input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input"></div></div><div id="local-search-result"></div></div></div></nav><script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script><link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet"><style>.pace .pace-progress{background:#00d9cf;height:2px}.pace .pace-progress-inner{box-shadow:0 0 10px #1e92fb,0 0 5px #1e92fb}.pace .pace-activity{border-top-color:#1e92fb;border-left-color:#1e92fb}</style></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><div id="posts" class="posts-expand"><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><div class="post-block"><link itemprop="mainEntityOfPage" href="http://lebens.top/EventBus3.0源码分析20171123/"><span hidden itemprop="author" itemscope itemtype="http://schema.org/Person"><meta itemprop="name" content="Lebens"><meta itemprop="description" content=""><meta itemprop="image" content="https://avatars1.githubusercontent.com/u/10048597?v=4"></span><span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization"><meta itemprop="name" content="Lebens"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">EventBus3.0源码分析</h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i> </span><span class="post-meta-item-text">发表于</span> <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-23T09:35:28+08:00">2017-11-23 </time></span><span class="post-category"><span class="post-meta-divider">|</span> <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i> </span><span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span></span></div></header><div class="post-body" itemprop="articleBody"><h4 id="1-什么是EventBus"><a href="#1-什么是EventBus" class="headerlink" title="1.什么是EventBus"></a>1.什么是EventBus</h4><p>根据官方介绍，eventbus是一个通过分布/观察者模式实现的消息总线，支持不同线程的调用，能极大的降低代码的耦合度。</p><a id="more"></a><h4 id="2-EventBus的实现"><a href="#2-EventBus的实现" class="headerlink" title="2.EventBus的实现"></a>2.EventBus的实现</h4><p>先上图，官方介绍流程图如下</p><p><img src="../../images/EventBus源码分析/EventBus-Publish-Subscribe.png" alt=""></p></div><div><br><div><div style="text-align:center;color:#ccc;font-size:14px">-------------THE END-------------</div></div></div><div><br><style>.my_post_copyright{padding:1px 0 1px 20px!important;margin-left:5px;border-left:3px solid #ed3726}.my_post_copyright p{line-height:1.5;margin:10px 0}.my_post_copyright p span{font-weight:700;padding-right:15px}</style><div class="my_post_copyright"><p><span>本文标题:</span><a href="/EventBus3.0源码分析20171123/">EventBus3.0源码分析</a></p><p><span>文章作者:</span><a href="/" title="访问 Lebens 的个人博客">Lebens</a></p><p><span>发布时间:</span>2017年11月23日 - 09:11</p><p><span>最后更新:</span>2017年11月23日 - 23:11</p><p><span>原始链接:</span><a href="/EventBus3.0源码分析20171123/" title="EventBus3.0源码分析">http://lebens.top/EventBus3.0源码分析20171123/</a> <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://lebens.top/EventBus3.0源码分析20171123/" aria-label="复制成功！"></i></span></p><p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p></div><script>var clipboard=new Clipboard(".fa-clipboard");clipboard.on("success",$(function(){$(".fa-clipboard").click(function(){swal({title:"",text:"复制成功",html:!1,timer:500,showConfirmButton:!1})})}))</script></div><footer class="post-footer"><div class="post-tags"><a href="/tags/eventbus/" rel="tag"># eventbus</a></div><div class="post-nav"><div class="post-nav-next post-nav-item"><a href="/JsBridge源码分析20171122/" rel="next" title="JsBride源码分析"><i class="fa fa-chevron-left"></i> JsBride源码分析</a></div><span class="post-nav-divider"></span><div class="post-nav-prev post-nav-item"></div></div></footer></div></article><div class="post-spread"></div></div></div></div><div class="sidebar-toggle"><div class="sidebar-toggle-line-wrap"><span class="sidebar-toggle-line sidebar-toggle-line-first"></span> <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span> <span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id="sidebar" class="sidebar"><div class="sidebar-inner"><ul class="sidebar-nav motion-element"><li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">文章目录</li><li class="sidebar-nav-overview" data-target="site-overview-wrap">站点概览</li></ul><section class="site-overview-wrap sidebar-panel"><div class="site-overview"><div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person"><img class="site-author-image" itemprop="image" src="https://avatars1.githubusercontent.com/u/10048597?v=4" alt="Lebens"><p class="site-author-name" itemprop="name">Lebens</p><p class="site-description motion-element" itemprop="description">我相信，梦里能到达的地方，总有一天，脚步也能到达</p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"><a href="/archives/"><span class="site-state-item-count">2</span> <span class="site-state-item-name">日志</span></a></div><div class="site-state-item site-state-categories"><a href="/categories/index.html"><span class="site-state-item-count">1</span> <span class="site-state-item-name">分类</span></a></div><div class="site-state-item site-state-tags"><a href="/tags/index.html"><span class="site-state-item-count">3</span> <span class="site-state-item-name">标签</span></a></div></nav><div class="links-of-author motion-element"><span class="links-of-author-item"><a href="https://github.com/shuangpinai" target="_blank" title="GitHub"><i class="fa fa-fw fa-globe"></i>GitHub</a></span></div></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active"><div class="post-toc"><div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-什么是EventBus"><span class="nav-number">1.</span> <span class="nav-text">1.什么是EventBus</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-EventBus的实现"><span class="nav-number">2.</span> <span class="nav-text">2.EventBus的实现</span></a></li></ol></div></div></section></div></aside></div></main><footer id="footer" class="footer"><div class="footer-inner"><div class="copyright">&copy; <span itemprop="copyrightYear">2017</span> <span class="with-love"><i class="fa fa-star"></i> </span><span class="author" itemprop="copyrightHolder">Lebens</span></div></div></footer><div class="back-to-top"><i class="fa fa-arrow-up"></i></div></div><script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script><script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script><script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script><script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script><script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script><script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script><script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script><script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script><script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script><script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script><script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script><script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script><script type="text/javascript">function proceedsearch(){$("body").append('<div class="search-popup-overlay local-search-pop-overlay"></div>').css("overflow","hidden"),$(".search-popup-overlay").click(onPopupClose),$(".popup").toggle();var t=$("#local-search-input");t.attr("autocapitalize","none"),t.attr("autocorrect","off"),t.focus()}var isfetched=!1,isXml=!0,search_path="search.xml";0===search_path.length?search_path="search.xml":/json$/i.test(search_path)&&(isXml=!1);var path="/"+search_path,onPopupClose=function(t){$(".popup").hide(),$("#local-search-input").val(""),$(".search-result-list").remove(),$("#no-result").remove(),$(".local-search-pop-overlay").remove(),$("body").css("overflow","")},searchFunc=function(t,e,o){"use strict";$("body").append('<div class="search-popup-overlay local-search-pop-overlay"><div id="search-loading-icon"><i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i></div></div>').css("overflow","hidden"),$("#search-loading-icon").css("margin","20% auto 0 auto").css("text-align","center"),$.ajax({url:t,dataType:isXml?"xml":"json",async:!0,success:function(t){isfetched=!0,$(".popup").detach().appendTo(".header-inner");var n=isXml?$("entry",t).map(function(){return{title:$("title",this).text(),content:$("content",this).text(),url:$("url",this).text()}}).get():t,r=document.getElementById(e),s=document.getElementById(o),a=function(){var t=r.value.trim().toLowerCase(),e=t.split(/[\s\-]+/);e.length>1&&e.push(t);var o=[];if(t.length>0&&n.forEach(function(n){var r=!1,s=0,a=0,i=n.title.trim(),c=i.toLowerCase(),l=n.content.trim().replace(/<[^>]+>/g,""),h=l.toLowerCase(),p=decodeURIComponent(n.url),u=[],f=[];if(""!=i&&(e.forEach(function(t){function e(t,e,o){var n=t.length;if(0===n)return[];var r=0,s=[],a=[];for(o||(e=e.toLowerCase(),t=t.toLowerCase());(s=e.indexOf(t,r))>-1;)a.push({position:s,word:t}),r=s+n;return a}u=u.concat(e(t,c,!1)),f=f.concat(e(t,h,!1))}),(u.length>0||f.length>0)&&(r=!0,s=u.length+f.length)),r){[u,f].forEach(function(t){t.sort(function(t,e){return e.position!==t.position?e.position-t.position:t.word.length-e.word.length})});function d(e,o,n,r){for(var s=r[r.length-1],i=s.position,c=s.word,l=[],h=0;i+c.length<=n&&0!=r.length;){c===t&&h++,l.push({position:i,length:c.length});var p=i+c.length;for(r.pop();0!=r.length&&(s=r[r.length-1],i=s.position,c=s.word,p>i);)r.pop()}return a+=h,{hits:l,start:o,end:n,searchTextCount:h}}var g=[];0!=u.length&&g.push(d(0,0,i.length,u));for(var v=[];0!=f.length;){var $=f[f.length-1],C=$.position,m=$.word,x=C-20,w=C+80;x<0&&(x=0),w<C+m.length&&(w=C+m.length),w>l.length&&(w=l.length),v.push(d(0,x,w,f))}v.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hits.length!==e.hits.length?e.hits.length-t.hits.length:t.start-e.start});var y=parseInt("1");y>=0&&(v=v.slice(0,y));function T(t,e){var o="",n=e.start;return e.hits.forEach(function(e){o+=t.substring(n,e.position);var r=e.position+e.length;o+='<b class="search-keyword">'+t.substring(e.position,r)+"</b>",n=r}),o+=t.substring(n,e.end)}var b="";0!=g.length?b+="<li><a href='"+p+"' class='search-result-title'>"+T(i,g[0])+"</a>":b+="<li><a href='"+p+"' class='search-result-title'>"+i+"</a>",v.forEach(function(t){b+="<a href='"+p+'\'><p class="search-result">'+T(l,t)+"...</p></a>"}),b+="</li>",o.push({item:b,searchTextCount:a,hitCount:s,id:o.length})}}),1===e.length&&""===e[0])s.innerHTML='<div id="no-result"><i class="fa fa-search fa-5x" /></div>';else if(0===o.length)s.innerHTML='<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>';else{o.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hitCount!==e.hitCount?e.hitCount-t.hitCount:e.id-t.id});var a='<ul class="search-result-list">';o.forEach(function(t){a+=t.item}),a+="</ul>",s.innerHTML=a}};r.addEventListener("input",a),$(".local-search-pop-overlay").remove(),$("body").css("overflow",""),proceedsearch()}})};$(".popup-trigger").click(function(t){t.stopPropagation(),!1===isfetched?searchFunc(path,"local-search-input","local-search-result"):proceedsearch()}),$(".popup-btn-close").click(onPopupClose),$(".popup").click(function(t){t.stopPropagation()}),$(document).on("keyup",function(t){27===t.which&&$(".search-popup").is(":visible")&&onPopupClose()})</script></div></body></header></html>
+<!DOCTYPE html><html class="theme-next mist use-motion" lang="zh-CN"><header id="header" class="header" itemscope itemtype="//schema.org/WPHeader"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="theme-color" content="#222"><script></script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"><link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css"><link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3"><link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222"><meta name="keywords" content="eventbus,"><meta name="description" content="1.什么是EventBus根据官方介绍，eventbus是一个通过分布/观察者模式实现的消息总线，支持不同线程的调用，能极大的降低代码的耦合度。"><meta name="keywords" content="eventbus"><meta property="og:type" content="article"><meta property="og:title" content="EventBus3.0源码分析"><meta property="og:url" content="http://lebens.top/EventBus3.0源码分析20171123/index.html"><meta property="og:site_name" content="Lebens"><meta property="og:description" content="1.什么是EventBus根据官方介绍，eventbus是一个通过分布/观察者模式实现的消息总线，支持不同线程的调用，能极大的降低代码的耦合度。"><meta property="og:locale" content="zh-CN"><meta property="og:image" content="http://lebens.top/images/EventBus源码分析/EventBus-Publish-Subscribe.png"><meta property="og:image" content="http://lebens.top/images/EventBus源码分析/eventbus成员变量.jpeg"><meta property="og:updated_time" content="2017-11-25T12:44:45.946Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="EventBus3.0源码分析"><meta name="twitter:description" content="1.什么是EventBus根据官方介绍，eventbus是一个通过分布/观察者模式实现的消息总线，支持不同线程的调用，能极大的降低代码的耦合度。"><meta name="twitter:image" content="http://lebens.top/images/EventBus源码分析/EventBus-Publish-Subscribe.png"><script type="text/javascript" id="hexo.configurations">var NexT=window.NexT||{},CONFIG={root:"/",scheme:"Mist",version:"5.1.3",sidebar:{position:"left",display:"post",offset:12,b2t:!1,scrollpercent:!1,onmobile:!1},fancybox:!0,tabs:!0,motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"slideDownIn",post_body:"slideDownIn",coll_header:"slideLeftIn",sidebar:"slideUpIn"}},duoshuo:{userId:"0",author:"博主"},algolia:{applicationID:"",apiKey:"",indexName:"",hits:{per_page:10},labels:{input_placeholder:"Search for Posts",hits_empty:"We didn't find any results for the search: ${query}",hits_stats:"${hits} results found in ${time} ms"}}}</script><link rel="canonical" href="http://lebens.top/EventBus3.0源码分析20171123/"><title>EventBus3.0源码分析 | Lebens</title><style>.forkme{display:none}@media (min-width:768px){.forkme{display:inline}}</style></head><body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN"><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="forkme"><a target="_blank" href="https://github.com/shuangpinai"><img style="position:absolute;top:0;left:0;border:0" src="https://camo.githubusercontent.com/567c3a48d796e2fc06ea80409cc9dd82bf714434/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"></a></div><header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-wrapper"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Lebens</span> <span class="logo-line-after"><i></i></span></a></div><p class="site-subtitle"></p></div><div class="site-nav-toggle"><button><span class="btn-bar"></span> <span class="btn-bar"></span> <span class="btn-bar"></span></button></div></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br>主页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i><br>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br>日志</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于我</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class="site-search"><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class="search-icon"><i class="fa fa-search"></i> </span><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span><div class="local-search-input-wrapper"><input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input"></div></div><div id="local-search-result"></div></div></div></nav><script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script><link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet"><style>.pace .pace-progress{background:#00d9cf;height:2px}.pace .pace-progress-inner{box-shadow:0 0 10px #1e92fb,0 0 5px #1e92fb}.pace .pace-activity{border-top-color:#1e92fb;border-left-color:#1e92fb}</style></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><div id="posts" class="posts-expand"><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><div class="post-block"><link itemprop="mainEntityOfPage" href="http://lebens.top/EventBus3.0源码分析20171123/"><span hidden itemprop="author" itemscope itemtype="http://schema.org/Person"><meta itemprop="name" content="Lebens"><meta itemprop="description" content=""><meta itemprop="image" content="https://avatars1.githubusercontent.com/u/10048597?v=4"></span><span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization"><meta itemprop="name" content="Lebens"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">EventBus3.0源码分析</h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i> </span><span class="post-meta-item-text">发表于</span> <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-23T09:35:28+08:00">2017-11-23 </time></span><span class="post-category"><span class="post-meta-divider">|</span> <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i> </span><span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span></span></div></header><div class="post-body" itemprop="articleBody"><h3 id="1-什么是EventBus"><a href="#1-什么是EventBus" class="headerlink" title="1.什么是EventBus"></a>1.什么是EventBus</h3><p>根据官方介绍，eventbus是一个通过分布/观察者模式实现的消息总线，支持不同线程的调用，能极大的降低代码的耦合度。</p><a id="more"></a><h3 id="2-EventBus的设计"><a href="#2-EventBus的设计" class="headerlink" title="2.EventBus的设计"></a>2.EventBus的设计</h3><p>先上图，官方介绍流程图如下</p><p><img src="../../images/EventBus源码分析/EventBus-Publish-Subscribe.png" alt=""></p><p>也很简单，就是通过Publisher post事件到eventbus，之后发送给subscriber进行处理。很明显事件的分发处理在eventbus中，那我们就先从eventbus开始看起。</p><h4 id="EventBus实现"><a href="#EventBus实现" class="headerlink" title="EventBus实现"></a>EventBus实现</h4><p>####实例获取方式如下，典型的单例模式：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Convenience singleton for apps using a process-wide EventBus instance. */</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> EventBus <span class="title">getDefault</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       <span class="keyword">if</span> (defaultInstance == <span class="keyword">null</span>) &#123;</span><br><span class="line">           <span class="keyword">synchronized</span> (EventBus.class) &#123;</span><br><span class="line">               <span class="keyword">if</span> (defaultInstance == <span class="keyword">null</span>) &#123;</span><br><span class="line">                   defaultInstance = <span class="keyword">new</span> EventBus();</span><br><span class="line">               &#125;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">return</span> defaultInstance;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>再来看一下构造方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Creates a new EventBus instance; each instance is a separate scope in which events are delivered. To use a</span></span><br><span class="line"><span class="comment">     * central bus, consider &#123;<span class="doctag">@link</span> #getDefault()&#125;.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">EventBus</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>(DEFAULT_BUILDER);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    EventBus(EventBusBuilder builder) &#123;</span><br><span class="line">        subscriptionsByEventType = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        typesBySubscriber = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        stickyEvents = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line">        mainThreadPoster = <span class="keyword">new</span> HandlerPoster(<span class="keyword">this</span>, Looper.getMainLooper(), <span class="number">10</span>);</span><br><span class="line">        backgroundPoster = <span class="keyword">new</span> BackgroundPoster(<span class="keyword">this</span>);</span><br><span class="line">        asyncPoster = <span class="keyword">new</span> AsyncPoster(<span class="keyword">this</span>);</span><br><span class="line">        indexCount = builder.subscriberInfoIndexes != <span class="keyword">null</span> ? builder.subscriberInfoIndexes.size() : <span class="number">0</span>;</span><br><span class="line">        subscriberMethodFinder = <span class="keyword">new</span> SubscriberMethodFinder(builder.subscriberInfoIndexes,</span><br><span class="line">                builder.strictMethodVerification, builder.ignoreGeneratedIndex);</span><br><span class="line">        logSubscriberExceptions = builder.logSubscriberExceptions;</span><br><span class="line">        logNoSubscriberMessages = builder.logNoSubscriberMessages;</span><br><span class="line">        sendSubscriberExceptionEvent = builder.sendSubscriberExceptionEvent;</span><br><span class="line">        sendNoSubscriberEvent = builder.sendNoSubscriberEvent;</span><br><span class="line">        throwSubscriberException = builder.throwSubscriberException;</span><br><span class="line">        eventInheritance = builder.eventInheritance;</span><br><span class="line">        executorService = builder.executorService;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>初始化一些成员变量，同时获取builder中的默认参数进行初始化。</p>
+<p><img src="../../images/EventBus源码分析/eventbus成员变量.jpeg" alt=""></p>
+<p>上图是eventbus的成员变量，通过变量名不难知道，主要是做了3部分的缓存：</p>
+<ol>
+<li>当前发送的eventTypes</li>
+<li>事件类型作为Key，Subscription的List集合作为Value的Map集合</li>
+<li>订阅者作为Key,订阅事件作为Value的Map集合</li>
+</ol>
+<p>####Subscriber的注册流程</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Registers the given subscriber to receive events. Subscribers must call &#123;<span class="doctag">@link</span> #unregister(Object)&#125; once they</span></span><br><span class="line"><span class="comment">     * are no longer interested in receiving events.</span></span><br><span class="line"><span class="comment">     * &lt;p/&gt;</span></span><br><span class="line"><span class="comment">     * Subscribers have event handling methods that must be annotated by &#123;<span class="doctag">@link</span> Subscribe&#125;.</span></span><br><span class="line"><span class="comment">     * The &#123;<span class="doctag">@link</span> Subscribe&#125; annotation also allows configuration like &#123;<span class="doctag">@link</span></span></span><br><span class="line"><span class="comment">     * ThreadMode&#125; and priority.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">register</span><span class="params">(Object subscriber)</span> </span>&#123;</span><br><span class="line">        Class&lt;?&gt; subscriberClass = subscriber.getClass();</span><br><span class="line">        List&lt;SubscriberMethod&gt; subscriberMethods = subscriberMethodFinder.findSubscriberMethods(subscriberClass);</span><br><span class="line">        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">            <span class="keyword">for</span> (SubscriberMethod subscriberMethod : subscriberMethods) &#123;</span><br><span class="line">                subscribe(subscriber, subscriberMethod);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>通过subscriberMethodFinder.findSubscriberMethods()获取到subscriberMethods，并进行了subscribe操作。</p>
+<p>####订阅方法的查找以及缓存操作</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function">List&lt;SubscriberMethod&gt; <span class="title">findSubscriberMethods</span><span class="params">(Class&lt;?&gt; subscriberClass)</span> </span>&#123;</span><br><span class="line">		<span class="comment">//先取缓存中的数据</span></span><br><span class="line">        List&lt;SubscriberMethod&gt; subscriberMethods = METHOD_CACHE.get(subscriberClass);</span><br><span class="line">        <span class="keyword">if</span> (subscriberMethods != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> subscriberMethods;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">//这是3.0新增的属性，是否强制使用反射的方式获取订阅方法</span></span><br><span class="line">        <span class="keyword">if</span> (ignoreGeneratedIndex) &#123;</span><br><span class="line">            subscriberMethods = findUsingReflection(subscriberClass);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">//这边如果没有配置自定义的MyEventBusIndex还是使用放射的方式获取</span></span><br><span class="line">            subscriberMethods = findUsingInfo(subscriberClass);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (subscriberMethods.isEmpty()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> EventBusException(<span class="string">"Subscriber "</span> + subscriberClass</span><br><span class="line">                    + <span class="string">" and its super classes have no public methods with the @Subscribe annotation"</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            METHOD_CACHE.put(subscriberClass, subscriberMethods);</span><br><span class="line">            <span class="keyword">return</span> subscriberMethods;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>======未完待续======</p>
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <br>
+        <div>
+    
+        <div style="text-align:center;color:#ccc;font-size:14px">-------------THE END-------------</div>
+    
+</div>
+      </div>
+    
+
+    <div>
+      
+        <br>
+        
+<style>.my_post_copyright{padding:1px 0 1px 20px!important;margin-left:5px;border-left:3px solid #ed3726}.my_post_copyright p{line-height:1.5;margin:10px 0}.my_post_copyright p span{font-weight:700;padding-right:15px}</style>
+<div class="my_post_copyright">
+  <p><span>本文标题:</span><a href="/EventBus3.0源码分析20171123/">EventBus3.0源码分析</a></p>
+  <p><span>文章作者:</span><a href="/" title="访问 Lebens 的个人博客">Lebens</a></p>
+  <p><span>发布时间:</span>2017年11月23日 - 09:11</p>
+  <p><span>最后更新:</span>2017年11月25日 - 20:11</p>
+  <p><span>原始链接:</span><a href="/EventBus3.0源码分析20171123/" title="EventBus3.0源码分析">http://lebens.top/EventBus3.0源码分析20171123/</a>
+    <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://lebens.top/EventBus3.0源码分析20171123/" aria-label="复制成功！"></i></span>
+  </p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
+</div>
+<script>var clipboard=new Clipboard(".fa-clipboard");clipboard.on("success",$(function(){$(".fa-clipboard").click(function(){swal({title:"",text:"复制成功",html:!1,timer:500,showConfirmButton:!1})})}))</script>
+
+      
+    </div>
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/eventbus/" rel="tag"># eventbus</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/JsBridge源码分析20171122/" rel="next" title="JsBride源码分析">
+                <i class="fa fa-chevron-left"></i> JsBride源码分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars1.githubusercontent.com/u/10048597?v=4" alt="Lebens">
+            
+              <p class="site-author-name" itemprop="name">Lebens</p>
+              <p class="site-description motion-element" itemprop="description">我相信，梦里能到达的地方，总有一天，脚步也能到达</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/shuangpinai" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-什么是EventBus"><span class="nav-number">1.</span> <span class="nav-text">1.什么是EventBus</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-EventBus的设计"><span class="nav-number">2.</span> <span class="nav-text">2.EventBus的设计</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#EventBus实现"><span class="nav-number">2.1.</span> <span class="nav-text">EventBus实现</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+  <i class="fa fa-star"></i>
+</span>
+  <span class="author" itemprop="copyrightHolder">Lebens</span>
+</div>
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">function proceedsearch(){$("body").append('<div class="search-popup-overlay local-search-pop-overlay"></div>').css("overflow","hidden"),$(".search-popup-overlay").click(onPopupClose),$(".popup").toggle();var t=$("#local-search-input");t.attr("autocapitalize","none"),t.attr("autocorrect","off"),t.focus()}var isfetched=!1,isXml=!0,search_path="search.xml";0===search_path.length?search_path="search.xml":/json$/i.test(search_path)&&(isXml=!1);var path="/"+search_path,onPopupClose=function(t){$(".popup").hide(),$("#local-search-input").val(""),$(".search-result-list").remove(),$("#no-result").remove(),$(".local-search-pop-overlay").remove(),$("body").css("overflow","")},searchFunc=function(t,e,o){"use strict";$("body").append('<div class="search-popup-overlay local-search-pop-overlay"><div id="search-loading-icon"><i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i></div></div>').css("overflow","hidden"),$("#search-loading-icon").css("margin","20% auto 0 auto").css("text-align","center"),$.ajax({url:t,dataType:isXml?"xml":"json",async:!0,success:function(t){isfetched=!0,$(".popup").detach().appendTo(".header-inner");var n=isXml?$("entry",t).map(function(){return{title:$("title",this).text(),content:$("content",this).text(),url:$("url",this).text()}}).get():t,r=document.getElementById(e),s=document.getElementById(o),a=function(){var t=r.value.trim().toLowerCase(),e=t.split(/[\s\-]+/);e.length>1&&e.push(t);var o=[];if(t.length>0&&n.forEach(function(n){var r=!1,s=0,a=0,i=n.title.trim(),c=i.toLowerCase(),l=n.content.trim().replace(/<[^>]+>/g,""),h=l.toLowerCase(),p=decodeURIComponent(n.url),u=[],f=[];if(""!=i&&(e.forEach(function(t){function e(t,e,o){var n=t.length;if(0===n)return[];var r=0,s=[],a=[];for(o||(e=e.toLowerCase(),t=t.toLowerCase());(s=e.indexOf(t,r))>-1;)a.push({position:s,word:t}),r=s+n;return a}u=u.concat(e(t,c,!1)),f=f.concat(e(t,h,!1))}),(u.length>0||f.length>0)&&(r=!0,s=u.length+f.length)),r){[u,f].forEach(function(t){t.sort(function(t,e){return e.position!==t.position?e.position-t.position:t.word.length-e.word.length})});function d(e,o,n,r){for(var s=r[r.length-1],i=s.position,c=s.word,l=[],h=0;i+c.length<=n&&0!=r.length;){c===t&&h++,l.push({position:i,length:c.length});var p=i+c.length;for(r.pop();0!=r.length&&(s=r[r.length-1],i=s.position,c=s.word,p>i);)r.pop()}return a+=h,{hits:l,start:o,end:n,searchTextCount:h}}var g=[];0!=u.length&&g.push(d(0,0,i.length,u));for(var v=[];0!=f.length;){var $=f[f.length-1],C=$.position,m=$.word,x=C-20,w=C+80;x<0&&(x=0),w<C+m.length&&(w=C+m.length),w>l.length&&(w=l.length),v.push(d(0,x,w,f))}v.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hits.length!==e.hits.length?e.hits.length-t.hits.length:t.start-e.start});var y=parseInt("1");y>=0&&(v=v.slice(0,y));function T(t,e){var o="",n=e.start;return e.hits.forEach(function(e){o+=t.substring(n,e.position);var r=e.position+e.length;o+='<b class="search-keyword">'+t.substring(e.position,r)+"</b>",n=r}),o+=t.substring(n,e.end)}var b="";0!=g.length?b+="<li><a href='"+p+"' class='search-result-title'>"+T(i,g[0])+"</a>":b+="<li><a href='"+p+"' class='search-result-title'>"+i+"</a>",v.forEach(function(t){b+="<a href='"+p+'\'><p class="search-result">'+T(l,t)+"...</p></a>"}),b+="</li>",o.push({item:b,searchTextCount:a,hitCount:s,id:o.length})}}),1===e.length&&""===e[0])s.innerHTML='<div id="no-result"><i class="fa fa-search fa-5x" /></div>';else if(0===o.length)s.innerHTML='<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>';else{o.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hitCount!==e.hitCount?e.hitCount-t.hitCount:e.id-t.id});var a='<ul class="search-result-list">';o.forEach(function(t){a+=t.item}),a+="</ul>",s.innerHTML=a}};r.addEventListener("input",a),$(".local-search-pop-overlay").remove(),$("body").css("overflow",""),proceedsearch()}})};$(".popup-trigger").click(function(t){t.stopPropagation(),!1===isfetched?searchFunc(path,"local-search-input","local-search-result"):proceedsearch()}),$(".popup-btn-close").click(onPopupClose),$(".popup").click(function(t){t.stopPropagation()}),$(document).on("keyup",function(t){27===t.which&&$(".search-popup").is(":visible")&&onPopupClose()})</script></div></body></header></html>
