@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[git 基本命令行]]></title>
+    <url>%2Fgit-%E5%9F%BA%E6%9C%AC%E5%91%BD%E4%BB%A4%E8%A1%8C20171212%2F</url>
+    <content type="text"><![CDATA[本文主要对一些常用的git命令行进行了分类汇总初始化仓库1git init 文件添加到暂存区1git add test.txt 文件提交1git commit -m "test file commint" 文件删除1git rm test.txt 与远程仓库关联1git remote add origin git@server-name:path/repo-name.git push内容到远程分支123git push -u origin master (首次提交，将本地git默认创建的master分支跟远程代码库关联，并push)git push origin master（后续提交，如若远端没有这个分支，则自动新建分支） 版本回滚git reset 共有3种模式，分别是 git reset –mixed 保留现有工作区，但是会用指定的commit覆盖暂存区。 git reset –soft 保留暂存区，但是会清空工作区。 git reset –hard 简单粗暴，直接使用指定的commit的内容覆盖stage区以及工作区。 12345git reset --hard HEAD^ 回滚到上一版本git reset --hard HEAD^^ 回滚前到两个版本 git reset --hard 123456578 回滚到指定哈希值的版本号 撤销修改 尚未add的文件撤销修改 1git checkout -- test.txt (撤销当前工作区的修改，返回最新暂存区的内容) 针对于已经add到暂存区的文件 123git reset HEAD test.txt (回滚) git checkout -- test.txt (并丢弃) 针对已经commit，但是尚未push到远端的文件 1git reset --hard HEAD^ 回滚到上一版本 分支 查看当前分支 1git branch 新建分支 12345git checkout -b dev (新建并切换)git branch dev （新建分支）git checkout -b branch-name origin/branch-name(新建与远端对应的分支) 删除分支 12345678910111213 git branch -d dev git branch -D dev (忽略警告，强制删除) git fetch -p (删除没有远程对应分支的本地分支) git push --delete origin dev (删除远程分支) ``` 4. 切换分支 ```java git checkout master 合并分支(merge以及rebase两种) 123git merge dev (假设当前在master分支，则表示将dev合并到master上)git rebase dev(同上) 本地分支和远程分支做关联 1git branch --set-upstream dev origin/dev 拉取远端最新代码 123456789 git pull ``` ##### tag管理1. 新建tag ```java git tag v1.0.0 指定commit上添加tag 123git tag v1.0.0 xxxxxxgit tag -a v1.0.0 -m "add version 1.0.0 tag" xxxxxx (带提交的信息) 查看所有tag 1git tag 查看tag信息 1git show v1.0.0 删除tag 123git tag -d v1.0.0 （删除本地）git push origin :refs/tags/v1.0.0 (再删除远端的tag) push tag至远端 123git push origin v1.0.0 (push 指定tag)git push origin --tags (push所有tag) 获取远端tag 12345git fetch origin tag v1.0.0 (更新tag)git pull --tags (获取远端所有的tag)git pull --all (用于解决远端tag无法再本地显示的问题)]]></content>
+      <categories>
+        <category>git</category>
+      </categories>
+      <tags>
+        <tag>git</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[Android Studio如何将一个project引用为module]]></title>
     <url>%2FAndroid-Studio%E5%A6%82%E4%BD%95%E5%B0%86%E4%B8%80%E4%B8%AAproject%E5%BC%95%E7%94%A8%E4%B8%BAmodule20171130%2F</url>
     <content type="text"><![CDATA[Project和Module的区别在Android Studio（以下简称：AS）中project中相当于eclipse的workspace也就是一个工作空间。在AS中Module就相当于一个单独项目App Module、Library Module以及Java Module的区别首先这三种module本质上没什么区别，主要区别在于AS在编译时根据不同的类型会生成不同的结果App Module编译生成apk文件，也就是我们的应用程序包。Java Module编译生成jar文件。Library Module编译生成aar文件，相对于jar文件，aar中包含有资源文件。如何将App Module转换成Libray Module引用新建两个project，如下图所示：新建完的project如下图所有，两个项目的app下build.gradle中可以看到类型都是“com.android.application”我们将需要被引用的project中的类型修改为library，如下图所示：接下来Sync一下，然后会得到一个如下错误提示：我们只需要把项目中的application id删除即可之后在主工程中import module选择我们修改好的project下的app文件夹，就是选中这个module导入因为主项目名也是app，这里直接使用app会有冲突，修改为自己喜欢的名字即可最后在主项目中的build.gradle中compile即可其他的问题swtich引起的问题，如下伪代码：1234567891011switch(id)&#123; case R.id.xxx: break; case R.id.yyy: break; case R.id.zzz: break; &#125; 这里在引用的时候就会报一个错误，提示id没有找到，这是因为引用的lib中id都不是final类型的，不能用在case中，这个时候只需要修改成 if() else() 的形式即可。对于大型项目的引用，这里的修就会比较繁琐。]]></content>
