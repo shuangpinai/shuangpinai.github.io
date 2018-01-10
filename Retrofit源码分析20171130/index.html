@@ -1,1 +1,482 @@
-<!DOCTYPE html><html class="theme-next mist use-motion" lang="zh-CN"><header id="header" class="header" itemscope itemtype="//schema.org/WPHeader"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="theme-color" content="#222"><script></script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"><link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css"><link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3"><link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222"><meta name="keywords" content="retrofit,okhttp,"><meta name="description" content="什么是retrofitretrofit 是Square公司为了方便网络请求，对自己okhttp底层网络请求进行了再一次封装的框架，意在简化网络请求调用。当然retrofit设计也并不单纯只为了okhttp服务，只是默认实现使用了okhttp。"><meta name="keywords" content="retrofit,okhttp"><meta property="og:type" content="article"><meta property="og:title" content="Retrofit源码分析"><meta property="og:url" content="http://lebens.top/Retrofit源码分析20171130/index.html"><meta property="og:site_name" content="Lebens"><meta property="og:description" content="什么是retrofitretrofit 是Square公司为了方便网络请求，对自己okhttp底层网络请求进行了再一次封装的框架，意在简化网络请求调用。当然retrofit设计也并不单纯只为了okhttp服务，只是默认实现使用了okhttp。"><meta property="og:locale" content="zh-CN"><meta property="og:updated_time" content="2018-01-09T08:41:47.215Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Retrofit源码分析"><meta name="twitter:description" content="什么是retrofitretrofit 是Square公司为了方便网络请求，对自己okhttp底层网络请求进行了再一次封装的框架，意在简化网络请求调用。当然retrofit设计也并不单纯只为了okhttp服务，只是默认实现使用了okhttp。"><script type="text/javascript" id="hexo.configurations">var NexT=window.NexT||{},CONFIG={root:"/",scheme:"Mist",version:"5.1.3",sidebar:{position:"left",display:"post",offset:12,b2t:!1,scrollpercent:!1,onmobile:!1},fancybox:!0,tabs:!0,motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"slideDownIn",post_body:"slideDownIn",coll_header:"slideLeftIn",sidebar:"slideUpIn"}},duoshuo:{userId:"0",author:"博主"},algolia:{applicationID:"",apiKey:"",indexName:"",hits:{per_page:10},labels:{input_placeholder:"Search for Posts",hits_empty:"We didn't find any results for the search: ${query}",hits_stats:"${hits} results found in ${time} ms"}}}</script><link rel="canonical" href="http://lebens.top/Retrofit源码分析20171130/"><title>Retrofit源码分析 | Lebens</title><style>.forkme{display:none}@media (min-width:768px){.forkme{display:inline}}</style></head><body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN"><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="forkme"><a target="_blank" href="https://github.com/shuangpinai"><img style="position:absolute;top:0;left:0;border:0" src="https://camo.githubusercontent.com/567c3a48d796e2fc06ea80409cc9dd82bf714434/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"></a></div><header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-wrapper"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Lebens</span> <span class="logo-line-after"><i></i></span></a></div><p class="site-subtitle"></p></div><div class="site-nav-toggle"><button><span class="btn-bar"></span> <span class="btn-bar"></span> <span class="btn-bar"></span></button></div></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br>主页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i><br>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br>日志</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于我</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class="site-search"><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class="search-icon"><i class="fa fa-search"></i> </span><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span><div class="local-search-input-wrapper"><input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input"></div></div><div id="local-search-result"></div></div></div></nav><script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script><link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet"><style>.pace .pace-progress{background:#00d9cf;height:2px}.pace .pace-progress-inner{box-shadow:0 0 10px #1e92fb,0 0 5px #1e92fb}.pace .pace-activity{border-top-color:#1e92fb;border-left-color:#1e92fb}</style></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><div id="posts" class="posts-expand"><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><div class="post-block"><link itemprop="mainEntityOfPage" href="http://lebens.top/Retrofit源码分析20171130/"><span hidden itemprop="author" itemscope itemtype="http://schema.org/Person"><meta itemprop="name" content="Lebens"><meta itemprop="description" content=""><meta itemprop="image" content="https://avatars1.githubusercontent.com/u/10048597?v=4"></span><span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization"><meta itemprop="name" content="Lebens"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Retrofit源码分析</h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i> </span><span class="post-meta-item-text">发表于</span> <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-30T09:08:05+08:00">2017-11-30 </time></span><span class="post-category"><span class="post-meta-divider">|</span> <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i> </span><span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span></span></div></header><div class="post-body" itemprop="articleBody"><h4 id="什么是retrofit"><a href="#什么是retrofit" class="headerlink" title="什么是retrofit"></a>什么是retrofit</h4><ul><li>retrofit 是Square公司为了方便网络请求，对自己okhttp底层网络请求进行了再一次封装的框架，意在简化网络请求调用。当然retrofit设计也并不单纯只为了okhttp服务，只是默认实现使用了okhttp。</li></ul><a id="more"></a><h4 id="retrofit的实现"><a href="#retrofit的实现" class="headerlink" title="retrofit的实现"></a>retrofit的实现</h4><p>先来看retrofit的几个重要类</p><h5 id="Retrofit"><a href="#Retrofit" class="headerlink" title="Retrofit"></a>Retrofit</h5><blockquote><p>Retrofit adapts a Java interface to HTTP calls by using annotations on the<br>declared methods to define how requests are made. Create instances using<br>{@linkplain Builder<br>the builder} and pass your interface to {@link #create} to generate an<br>implementation.</p></blockquote><ul><li>通过动态代理的方式，解析方法申明上的注解来生成http请求。</li><li>Retrofit实例主要充当一个适配器的角色。</li></ul><h5 id="Call"><a href="#Call" class="headerlink" title="Call"></a>Call</h5><blockquote><p>An invocation of a Retrofit method that sends a request to a webserver and<br>returns a response.<br>Each call yields its own HTTP request and response pair. Use {@link #clone}<br>to make multiple<br>calls with the same parameters to the same webserver; this may be used to<br>implement polling or to retry a failed call.</p></blockquote><ul><li>Retrofit方法的一个实现，向服务器发送一个请求，并返回一个响应</li><li>保存了一对http的请求以及响应</li></ul><h5 id="Converter"><a href="#Converter" class="headerlink" title="Converter"></a>Converter<f ,="" t=""></f></h5><blockquote><p>Convert objects to and from their representation in HTTP. Instances are<br>created by {@linkplain<br>Factory a factory} which is {@linkplain<br>Retrofit.Builder#addConverterFactory(Factory) installed}<br>into the {@link Retrofit} instance.</p></blockquote><ul><li>构建出http需要的请求以及相应</li></ul><h5 id="CallAdapter"><a href="#CallAdapter" class="headerlink" title="CallAdapter"></a>CallAdapter<r ,="" t=""></r></h5><blockquote><p>Adapts a {@link Call} with response type {@code R} into the type of {@code<br>T}. Instances are<br>created by {@linkplain Factory a factory} which is<br>{@linkplain Retrofit.Builder#addCallAdapterFactory(Factory) installed} into<br>the {@link Retrofit}<br>instance.</p></blockquote><ul><li>将R类型的一个请求适配成T类型的请求</li></ul><h5 id="ServiceMethod"><a href="#ServiceMethod" class="headerlink" title="ServiceMethod"></a>ServiceMethod<r ,="" t=""></r></h5><blockquote><p>Adapts an invocation of an interface method into an HTTP call.</p></blockquote><ul><li>将定义的网络请求方法适配成一个http call</li></ul><h5 id="ParameterHandler"><a href="#ParameterHandler" class="headerlink" title="ParameterHandler"></a>ParameterHandler</h5><ul><li>ServiceMethod解析参数时具体值保存的位置</li></ul><h5 id="RequestBuilder"><a href="#RequestBuilder" class="headerlink" title="RequestBuilder"></a>RequestBuilder</h5><ul><li>构建一个初始的Request</li></ul><p>未完待续</p></div><div><br><div><div style="text-align:center;color:#ccc;font-size:14px">-------------THE END-------------</div></div></div><div><br><style>.my_post_copyright{padding:1px 0 1px 20px!important;margin-left:5px;border-left:3px solid #ed3726}.my_post_copyright p{line-height:1.5;margin:10px 0}.my_post_copyright p span{font-weight:700;padding-right:15px}</style><div class="my_post_copyright"><p><span>本文标题:</span><a href="/Retrofit源码分析20171130/">Retrofit源码分析</a></p><p><span>文章作者:</span><a href="/" title="访问 Lebens 的个人博客">Lebens</a></p><p><span>发布时间:</span>2017年11月30日 - 09:11</p><p><span>最后更新:</span>2018年01月09日 - 16:01</p><p><span>原始链接:</span><a href="/Retrofit源码分析20171130/" title="Retrofit源码分析">http://lebens.top/Retrofit源码分析20171130/</a> <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://lebens.top/Retrofit源码分析20171130/" aria-label="复制成功！"></i></span></p><p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p></div><script>var clipboard=new Clipboard(".fa-clipboard");clipboard.on("success",$(function(){$(".fa-clipboard").click(function(){swal({title:"",text:"复制成功",html:!1,timer:500,showConfirmButton:!1})})}))</script></div><footer class="post-footer"><div class="post-tags"><a href="/tags/retrofit/" rel="tag"># retrofit</a> <a href="/tags/okhttp/" rel="tag"># okhttp</a></div><div class="post-nav"><div class="post-nav-next post-nav-item"><a href="/EventBus3.0源码分析20171123/" rel="next" title="EventBus3.0源码分析"><i class="fa fa-chevron-left"></i> EventBus3.0源码分析</a></div><span class="post-nav-divider"></span><div class="post-nav-prev post-nav-item"><a href="/Android-Studio如何将一个project引用为module20171130/" rel="prev" title="Android Studio如何将一个project引用为module">Android Studio如何将一个project引用为module <i class="fa fa-chevron-right"></i></a></div></div></footer></div></article><div class="post-spread"></div></div></div></div><div class="sidebar-toggle"><div class="sidebar-toggle-line-wrap"><span class="sidebar-toggle-line sidebar-toggle-line-first"></span> <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span> <span class="sidebar-toggle-line sidebar-toggle-line-last"></span></div></div><aside id="sidebar" class="sidebar"><div class="sidebar-inner"><ul class="sidebar-nav motion-element"><li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">文章目录</li><li class="sidebar-nav-overview" data-target="site-overview-wrap">站点概览</li></ul><section class="site-overview-wrap sidebar-panel"><div class="site-overview"><div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person"><img class="site-author-image" itemprop="image" src="https://avatars1.githubusercontent.com/u/10048597?v=4" alt="Lebens"><p class="site-author-name" itemprop="name">Lebens</p><p class="site-description motion-element" itemprop="description">我相信，梦里能到达的地方，总有一天，脚步也能到达</p></div><nav class="site-state motion-element"><div class="site-state-item site-state-posts"><a href="/archives/"><span class="site-state-item-count">5</span> <span class="site-state-item-name">日志</span></a></div><div class="site-state-item site-state-categories"><a href="/categories/index.html"><span class="site-state-item-count">2</span> <span class="site-state-item-name">分类</span></a></div><div class="site-state-item site-state-tags"><a href="/tags/index.html"><span class="site-state-item-count">6</span> <span class="site-state-item-name">标签</span></a></div></nav><div class="links-of-author motion-element"><span class="links-of-author-item"><a href="https://github.com/shuangpinai" target="_blank" title="GitHub"><i class="fa fa-fw fa-globe"></i>GitHub</a></span></div><div class="links-of-blogroll motion-element links-of-blogroll-inline"><div class="links-of-blogroll-title"><i class="fa fa-fw fa-link"></i> 友情链接</div><ul class="links-of-blogroll-list"><li class="links-of-blogroll-item"><a href="http://blog.csdn.net/zzhouqianq" title="易凌风" target="_blank">易凌风</a></li><li class="links-of-blogroll-item"><a href="http://cdevlab.top/" title="chendong" target="_blank">chendong</a></li></ul></div></div></section><section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active"><div class="post-toc"><div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#什么是retrofit"><span class="nav-number">1.</span> <span class="nav-text">什么是retrofit</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#retrofit的实现"><span class="nav-number">2.</span> <span class="nav-text">retrofit的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Retrofit"><span class="nav-number">2.1.</span> <span class="nav-text">Retrofit</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Call"><span class="nav-number">2.2.</span> <span class="nav-text">Call</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Converter"><span class="nav-number">2.3.</span> <span class="nav-text">Converter</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#CallAdapter"><span class="nav-number">2.4.</span> <span class="nav-text">CallAdapter</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#ServiceMethod"><span class="nav-number">2.5.</span> <span class="nav-text">ServiceMethod</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#ParameterHandler"><span class="nav-number">2.6.</span> <span class="nav-text">ParameterHandler</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#RequestBuilder"><span class="nav-number">2.7.</span> <span class="nav-text">RequestBuilder</span></a></li></ol></li></ol></div></div></section></div></aside></div></main><footer id="footer" class="footer"><div class="footer-inner"><div class="copyright">&copy; <span itemprop="copyrightYear">2018</span> <span class="with-love"><i class="fa fa-star"></i> </span><span class="author" itemprop="copyrightHolder">Lebens</span></div></div></footer><div class="back-to-top"><i class="fa fa-arrow-up"></i></div></div><script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script><script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script><script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script><script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script><script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script><script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script><script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script><script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script><script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script><script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script><script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script><script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script><script type="text/javascript">function proceedsearch(){$("body").append('<div class="search-popup-overlay local-search-pop-overlay"></div>').css("overflow","hidden"),$(".search-popup-overlay").click(onPopupClose),$(".popup").toggle();var t=$("#local-search-input");t.attr("autocapitalize","none"),t.attr("autocorrect","off"),t.focus()}var isfetched=!1,isXml=!0,search_path="search.xml";0===search_path.length?search_path="search.xml":/json$/i.test(search_path)&&(isXml=!1);var path="/"+search_path,onPopupClose=function(t){$(".popup").hide(),$("#local-search-input").val(""),$(".search-result-list").remove(),$("#no-result").remove(),$(".local-search-pop-overlay").remove(),$("body").css("overflow","")},searchFunc=function(t,e,o){"use strict";$("body").append('<div class="search-popup-overlay local-search-pop-overlay"><div id="search-loading-icon"><i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i></div></div>').css("overflow","hidden"),$("#search-loading-icon").css("margin","20% auto 0 auto").css("text-align","center"),$.ajax({url:t,dataType:isXml?"xml":"json",async:!0,success:function(t){isfetched=!0,$(".popup").detach().appendTo(".header-inner");var n=isXml?$("entry",t).map(function(){return{title:$("title",this).text(),content:$("content",this).text(),url:$("url",this).text()}}).get():t,r=document.getElementById(e),s=document.getElementById(o),a=function(){var t=r.value.trim().toLowerCase(),e=t.split(/[\s\-]+/);e.length>1&&e.push(t);var o=[];if(t.length>0&&n.forEach(function(n){var r=!1,s=0,a=0,i=n.title.trim(),c=i.toLowerCase(),l=n.content.trim().replace(/<[^>]+>/g,""),h=l.toLowerCase(),p=decodeURIComponent(n.url),u=[],f=[];if(""!=i&&(e.forEach(function(t){function e(t,e,o){var n=t.length;if(0===n)return[];var r=0,s=[],a=[];for(o||(e=e.toLowerCase(),t=t.toLowerCase());(s=e.indexOf(t,r))>-1;)a.push({position:s,word:t}),r=s+n;return a}u=u.concat(e(t,c,!1)),f=f.concat(e(t,h,!1))}),(u.length>0||f.length>0)&&(r=!0,s=u.length+f.length)),r){[u,f].forEach(function(t){t.sort(function(t,e){return e.position!==t.position?e.position-t.position:t.word.length-e.word.length})});function d(e,o,n,r){for(var s=r[r.length-1],i=s.position,c=s.word,l=[],h=0;i+c.length<=n&&0!=r.length;){c===t&&h++,l.push({position:i,length:c.length});var p=i+c.length;for(r.pop();0!=r.length&&(s=r[r.length-1],i=s.position,c=s.word,p>i);)r.pop()}return a+=h,{hits:l,start:o,end:n,searchTextCount:h}}var g=[];0!=u.length&&g.push(d(0,0,i.length,u));for(var v=[];0!=f.length;){var $=f[f.length-1],C=$.position,m=$.word,x=C-20,w=C+80;x<0&&(x=0),w<C+m.length&&(w=C+m.length),w>l.length&&(w=l.length),v.push(d(0,x,w,f))}v.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hits.length!==e.hits.length?e.hits.length-t.hits.length:t.start-e.start});var y=parseInt("1");y>=0&&(v=v.slice(0,y));function T(t,e){var o="",n=e.start;return e.hits.forEach(function(e){o+=t.substring(n,e.position);var r=e.position+e.length;o+='<b class="search-keyword">'+t.substring(e.position,r)+"</b>",n=r}),o+=t.substring(n,e.end)}var b="";0!=g.length?b+="<li><a href='"+p+"' class='search-result-title'>"+T(i,g[0])+"</a>":b+="<li><a href='"+p+"' class='search-result-title'>"+i+"</a>",v.forEach(function(t){b+="<a href='"+p+'\'><p class="search-result">'+T(l,t)+"...</p></a>"}),b+="</li>",o.push({item:b,searchTextCount:a,hitCount:s,id:o.length})}}),1===e.length&&""===e[0])s.innerHTML='<div id="no-result"><i class="fa fa-search fa-5x" /></div>';else if(0===o.length)s.innerHTML='<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>';else{o.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hitCount!==e.hitCount?e.hitCount-t.hitCount:e.id-t.id});var a='<ul class="search-result-list">';o.forEach(function(t){a+=t.item}),a+="</ul>",s.innerHTML=a}};r.addEventListener("input",a),$(".local-search-pop-overlay").remove(),$("body").css("overflow",""),proceedsearch()}})};$(".popup-trigger").click(function(t){t.stopPropagation(),!1===isfetched?searchFunc(path,"local-search-input","local-search-result"):proceedsearch()}),$(".popup-btn-close").click(onPopupClose),$(".popup").click(function(t){t.stopPropagation()}),$(document).on("keyup",function(t){27===t.which&&$(".search-popup").is(":visible")&&onPopupClose()})</script></div></body></header></html>
+<!DOCTYPE html><html class="theme-next mist use-motion" lang="zh-CN"><header id="header" class="header" itemscope itemtype="//schema.org/WPHeader"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="theme-color" content="#222"><script></script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"><link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css"><link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3"><link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222"><meta name="keywords" content="retrofit,okhttp,"><meta name="description" content="什么是Retrofitretrofit 是Square公司为了方便网络请求，对自己okhttp底层网络请求进行了再一次封装的框架，意在简化网络请求调用。当然retrofit设计也并不单纯只为了okhttp服务，只是默认实现使用了okhttp。"><meta name="keywords" content="retrofit,okhttp"><meta property="og:type" content="article"><meta property="og:title" content="Retrofit源码分析"><meta property="og:url" content="http://lebens.top/Retrofit源码分析20171130/index.html"><meta property="og:site_name" content="Lebens"><meta property="og:description" content="什么是Retrofitretrofit 是Square公司为了方便网络请求，对自己okhttp底层网络请求进行了再一次封装的框架，意在简化网络请求调用。当然retrofit设计也并不单纯只为了okhttp服务，只是默认实现使用了okhttp。"><meta property="og:locale" content="zh-CN"><meta property="og:updated_time" content="2018-01-10T10:00:14.646Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Retrofit源码分析"><meta name="twitter:description" content="什么是Retrofitretrofit 是Square公司为了方便网络请求，对自己okhttp底层网络请求进行了再一次封装的框架，意在简化网络请求调用。当然retrofit设计也并不单纯只为了okhttp服务，只是默认实现使用了okhttp。"><script type="text/javascript" id="hexo.configurations">var NexT=window.NexT||{},CONFIG={root:"/",scheme:"Mist",version:"5.1.3",sidebar:{position:"left",display:"post",offset:12,b2t:!1,scrollpercent:!1,onmobile:!1},fancybox:!0,tabs:!0,motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"slideDownIn",post_body:"slideDownIn",coll_header:"slideLeftIn",sidebar:"slideUpIn"}},duoshuo:{userId:"0",author:"博主"},algolia:{applicationID:"",apiKey:"",indexName:"",hits:{per_page:10},labels:{input_placeholder:"Search for Posts",hits_empty:"We didn't find any results for the search: ${query}",hits_stats:"${hits} results found in ${time} ms"}}}</script><link rel="canonical" href="http://lebens.top/Retrofit源码分析20171130/"><title>Retrofit源码分析 | Lebens</title><style>.forkme{display:none}@media (min-width:768px){.forkme{display:inline}}</style></head><body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN"><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="forkme"><a target="_blank" href="https://github.com/shuangpinai"><img style="position:absolute;top:0;left:0;border:0" src="https://camo.githubusercontent.com/567c3a48d796e2fc06ea80409cc9dd82bf714434/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"></a></div><header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-wrapper"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Lebens</span> <span class="logo-line-after"><i></i></span></a></div><p class="site-subtitle"></p></div><div class="site-nav-toggle"><button><span class="btn-bar"></span> <span class="btn-bar"></span> <span class="btn-bar"></span></button></div></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br>主页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i><br>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br>日志</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于我</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class="site-search"><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class="search-icon"><i class="fa fa-search"></i> </span><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span><div class="local-search-input-wrapper"><input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input"></div></div><div id="local-search-result"></div></div></div></nav><script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script><link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet"><style>.pace .pace-progress{background:#00d9cf;height:2px}.pace .pace-progress-inner{box-shadow:0 0 10px #1e92fb,0 0 5px #1e92fb}.pace .pace-activity{border-top-color:#1e92fb;border-left-color:#1e92fb}</style></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><div id="posts" class="posts-expand"><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><div class="post-block"><link itemprop="mainEntityOfPage" href="http://lebens.top/Retrofit源码分析20171130/"><span hidden itemprop="author" itemscope itemtype="http://schema.org/Person"><meta itemprop="name" content="Lebens"><meta itemprop="description" content=""><meta itemprop="image" content="https://avatars1.githubusercontent.com/u/10048597?v=4"></span><span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization"><meta itemprop="name" content="Lebens"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Retrofit源码分析</h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i> </span><span class="post-meta-item-text">发表于</span> <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-30T09:08:05+08:00">2017-11-30 </time></span><span class="post-category"><span class="post-meta-divider">|</span> <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i> </span><span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span></span></div></header><div class="post-body" itemprop="articleBody"><h3 id="什么是Retrofit"><a href="#什么是Retrofit" class="headerlink" title="什么是Retrofit"></a>什么是Retrofit</h3><ul><li>retrofit 是Square公司为了方便网络请求，对自己okhttp底层网络请求进行了再一次封装的框架，意在简化网络请求调用。当然retrofit设计也并不单纯只为了okhttp服务，只是默认实现使用了okhttp。</li></ul><a id="more"></a><h3 id="Retrofit的实现"><a href="#Retrofit的实现" class="headerlink" title="Retrofit的实现"></a>Retrofit的实现</h3><p>先来看retrofit的几个重要类</p><h5 id="Retrofit"><a href="#Retrofit" class="headerlink" title="Retrofit"></a>Retrofit</h5><blockquote><p>Retrofit adapts a Java interface to HTTP calls by using annotations on the<br>declared methods to define how requests are made. Create instances using<br>{@linkplain Builder<br>the builder} and pass your interface to {@link #create} to generate an<br>implementation.</p></blockquote><ul><li>通过动态代理的方式，解析方法申明上的注解来生成http请求。</li><li>Retrofit实例主要充当一个适配器的角色。</li></ul><h5 id="Call"><a href="#Call" class="headerlink" title="Call"></a>Call</h5><blockquote><p>An invocation of a Retrofit method that sends a request to a webserver and<br>returns a response.<br>Each call yields its own HTTP request and response pair. Use {@link #clone}<br>to make multiple<br>calls with the same parameters to the same webserver; this may be used to<br>implement polling or to retry a failed call.</p></blockquote><ul><li>Retrofit方法的一个实现，向服务器发送一个请求，并返回一个响应</li><li>保存了一对http的请求以及响应</li></ul><h5 id="Converter"><a href="#Converter" class="headerlink" title="Converter"></a>Converter<f ,="" t=""></f></h5><blockquote><p>Convert objects to and from their representation in HTTP. Instances are<br>created by {@linkplain<br>Factory a factory} which is {@linkplain<br>Retrofit.Builder#addConverterFactory(Factory) installed}<br>into the {@link Retrofit} instance.</p></blockquote><ul><li>对http响应进行转换，转换成请求接口需要的返回类型</li></ul><h5 id="CallAdapter"><a href="#CallAdapter" class="headerlink" title="CallAdapter"></a>CallAdapter<r ,="" t=""></r></h5><blockquote><p>Adapts a {@link Call} with response type {@code R} into the type of {@code<br>T}. Instances are<br>created by {@linkplain Factory a factory} which is<br>{@linkplain Retrofit.Builder#addCallAdapterFactory(Factory) installed} into<br>the {@link Retrofit}<br>instance.</p></blockquote><ul><li>对请求进行适配，以满足接口要求</li></ul><h5 id="ServiceMethod"><a href="#ServiceMethod" class="headerlink" title="ServiceMethod"></a>ServiceMethod<r ,="" t=""></r></h5><blockquote><p>Adapts an invocation of an interface method into an HTTP call.</p></blockquote><ul><li>将定义的网络请求方法适配成一个http call</li></ul><h5 id="ParameterHandler"><a href="#ParameterHandler" class="headerlink" title="ParameterHandler"></a>ParameterHandler</h5><ul><li>ServiceMethod解析参数时具体值保存的位置</li></ul><h5 id="RequestBuilder"><a href="#RequestBuilder" class="headerlink" title="RequestBuilder"></a>RequestBuilder</h5><ul><li>构建一个初始的Request</li></ul><h3 id="Retrofit发起请求的过程"><a href="#Retrofit发起请求的过程" class="headerlink" title="Retrofit发起请求的过程"></a>Retrofit发起请求的过程</h3><ul><li><p>先看一下调用的代码。</p><p>Retrofit创建时使用的动态代理方式，中间的Platform就是根据不同的平台做了兼容。这里可以很清晰看到，对service进行代理，通过其中的method构建一个serviceMethod，进而new出okHttpCall,并使用serviceMethod内部持有的callAdapter对okHttpCall进行网路请求以及适配成用户期望的返回类型，完成一次网络请求。</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">create</span><span class="params">(<span class="keyword">final</span> Class&lt;T&gt; service)</span> </span>&#123;</span><br><span class="line">  Utils.validateServiceInterface(service);</span><br><span class="line">  <span class="keyword">if</span> (validateEagerly) &#123;</span><br><span class="line">    eagerlyValidateMethods(service);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> (T) Proxy.newProxyInstance(service.getClassLoader(), <span class="keyword">new</span> Class&lt;?&gt;[] &#123; service &#125;,</span><br><span class="line">      <span class="keyword">new</span> InvocationHandler() &#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> Platform platform = Platform.get();</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, @Nullable Object[] args)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">          <span class="comment">// If the method is a method from Object then defer to normal invocation.</span></span><br><span class="line">          <span class="keyword">if</span> (method.getDeclaringClass() == Object.class) &#123;</span><br><span class="line">            <span class="keyword">return</span> method.invoke(<span class="keyword">this</span>, args);</span><br><span class="line">          &#125;</span><br><span class="line">          <span class="keyword">if</span> (platform.isDefaultMethod(method)) &#123;</span><br><span class="line">            <span class="keyword">return</span> platform.invokeDefaultMethod(method, service, proxy, args);</span><br><span class="line">          &#125;</span><br><span class="line">          ServiceMethod&lt;Object, Object&gt; serviceMethod =</span><br><span class="line">              (ServiceMethod&lt;Object, Object&gt;) loadServiceMethod(method);</span><br><span class="line">          OkHttpCall&lt;Object&gt; okHttpCall = <span class="keyword">new</span> OkHttpCall&lt;&gt;(serviceMethod, args);</span><br><span class="line">          <span class="keyword">return</span> serviceMethod.callAdapter.adapt(okHttpCall);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>ServiceMethod的构建</p>
+<p>  ServiceMethodg构建过程主要是对Service中定义的网络请求进行注解的解析处理，将完成的参数保存在ParameterHandler中以便后续取用，至于注解参数的获取比较琐碎，这里不做赘述。</p>
+</li>
+<li><p>CallAdapter的获取</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> CallAdapter&lt;T, R&gt; <span class="title">createCallAdapter</span><span class="params">()</span> </span>&#123;</span><br><span class="line">     Type returnType = method.getGenericReturnType();</span><br><span class="line">     <span class="keyword">if</span> (Utils.hasUnresolvableType(returnType)) &#123;</span><br><span class="line">       <span class="keyword">throw</span> methodError(</span><br><span class="line">           <span class="string">"Method return type must not include a type variable or wildcard: %s"</span>, returnType);</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">if</span> (returnType == <span class="keyword">void</span>.class) &#123;</span><br><span class="line">       <span class="keyword">throw</span> methodError(<span class="string">"Service methods cannot return void."</span>);</span><br><span class="line">     &#125;</span><br><span class="line">     Annotation[] annotations = method.getAnnotations();</span><br><span class="line">     <span class="keyword">try</span> &#123;</span><br><span class="line">       <span class="comment">//noinspection unchecked</span></span><br><span class="line">       <span class="keyword">return</span> (CallAdapter&lt;T, R&gt;) retrofit.callAdapter(returnType, annotations);</span><br><span class="line">     &#125; <span class="keyword">catch</span> (RuntimeException e) &#123; <span class="comment">// Wide exception range because factories are user code.</span></span><br><span class="line">       <span class="keyword">throw</span> methodError(e, <span class="string">"Unable to create call adapter for %s"</span>, returnType);</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<pre><code>这里开始用到了工厂模式，使用CallAdapter.Factory的方式来获取CallAdapter。我们知道在构建Retrofit时是可以addCallAdapterFactory的，这就意味着我们可以自己实现CallAdapter，提供给Retrofit使用，提高代码的扩展性。
+
+通过遍历Retrofit中保存的CallAdapter.Factory列表获取到符合条件的Factory用做请求的转换。
+
+通过上面代码可以知道，实际上获取到的时候是retrofit中默认初始化的CallAdapter
+</code></pre><ul>
+<li><p>默认CallAdapter</p>
+<p>  在Retrofit build过程中可以看到如下代码</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">	</span><br><span class="line">Executor callbackExecutor = <span class="keyword">this</span>.callbackExecutor;</span><br><span class="line">    <span class="keyword">if</span> (callbackExecutor == <span class="keyword">null</span>) &#123;</span><br><span class="line">      callbackExecutor = platform.defaultCallbackExecutor();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Make a defensive copy of the adapters and add the default Call adapter.</span></span><br><span class="line">    List&lt;CallAdapter.Factory&gt; adapterFactories = <span class="keyword">new</span> ArrayList&lt;&gt;(<span class="keyword">this</span>.adapterFactories);</span><br><span class="line">    adapterFactories.add(platform.defaultCallAdapterFactory(callbackExecutor));</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<pre><code>通过平台的适配我们获取到的platform其实是如下Android平台
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Android</span> <span class="keyword">extends</span> <span class="title">Platform</span> </span>&#123;</span><br><span class="line">   <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> Executor <span class="title">defaultCallbackExecutor</span><span class="params">()</span> </span>&#123;</span><br><span class="line">     <span class="keyword">return</span> <span class="keyword">new</span> MainThreadExecutor();</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Override</span> CallAdapter.<span class="function">Factory <span class="title">defaultCallAdapterFactory</span><span class="params">(@Nullable Executor callbackExecutor)</span> </span>&#123;</span><br><span class="line">     <span class="keyword">if</span> (callbackExecutor == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> AssertionError();</span><br><span class="line">     <span class="keyword">return</span> <span class="keyword">new</span> ExecutorCallAdapterFactory(callbackExecutor);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">MainThreadExecutor</span> <span class="keyword">implements</span> <span class="title">Executor</span> </span>&#123;</span><br><span class="line">     <span class="keyword">private</span> <span class="keyword">final</span> Handler handler = <span class="keyword">new</span> Handler(Looper.getMainLooper());</span><br><span class="line"></span><br><span class="line">     <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable r)</span> </span>&#123;</span><br><span class="line">       handler.post(r);</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+
+通过安卓平台可以初始化一个默认的ExecutorCallAdapterFactory，用以获取默认的CallAdapter。
+
+通过ExecutorCallAdapterFactory可以get到一个CallAdapter的实现，并将Call适配成一个ExecutorCallbackCall，内部处理了网络请求以及线程的切换。
+</code></pre><ul>
+<li><h3 id="请求的梳理"><a href="#请求的梳理" class="headerlink" title="请求的梳理"></a>请求的梳理</h3><p>  通过上面的分析知道，默认的请求过程如下：</p>
+<ol>
+<li>对Service进行动态代理</li>
+<li>构建出ServiceMethod</li>
+<li>通过ServiceMethod构建出OkHttpCall</li>
+<li>通过ServiceMethod中的CallAdapter实际也就是ExecutorCallAdapterFactory，对OkHttpCall进行适配获取到我们所需要的Call对象</li>
+<li><p>得到用户需要的Call之后就可以进行execute或者enqueue操作。</p>
+<p>到这里基本的网络请求算是完了。</p>
+</li>
+</ol>
+</li>
+</ul>
+<p>·～～～～～～～～～～～～～～～～～～·</p>
+<p>·～～～～～～～～～～～～～～～～～～·</p>
+<p>·～～～～～～我是分割线～～～～～～～·</p>
+<p>·～～～～～～～～～～～～～～～～～～·</p>
+<p>·～～～～～～～～～～～～～～～～～～·</p>
+<p>等等！是不是感觉漏掉了什么东西，前面提到的Converter好像用到。</p>
+<p>开头说过Converter是对响应做了转换，那肯定是在Call中用到，那我们回过头去看OkHttpCall的构建。</p>
+<ul>
+<li><p>OkHttpCall</p>
+<p>  主要看一下response的解析</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function">Response&lt;T&gt; <span class="title">parseResponse</span><span class="params">(okhttp3.Response rawResponse)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">   ResponseBody rawBody = rawResponse.body();</span><br><span class="line"></span><br><span class="line">   <span class="comment">// Remove the body's source (the only stateful object) so we can pass the response along.</span></span><br><span class="line">   rawResponse = rawResponse.newBuilder()</span><br><span class="line">       .body(<span class="keyword">new</span> NoContentResponseBody(rawBody.contentType(), rawBody.contentLength()))</span><br><span class="line">       .build();</span><br><span class="line"></span><br><span class="line">   <span class="keyword">int</span> code = rawResponse.code();</span><br><span class="line">   <span class="keyword">if</span> (code &lt; <span class="number">200</span> || code &gt;= <span class="number">300</span>) &#123;</span><br><span class="line">     <span class="keyword">try</span> &#123;</span><br><span class="line">       <span class="comment">// Buffer the entire body to avoid future I/O.</span></span><br><span class="line">       ResponseBody bufferedBody = Utils.buffer(rawBody);</span><br><span class="line">       <span class="keyword">return</span> Response.error(bufferedBody, rawResponse);</span><br><span class="line">     &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">       rawBody.close();</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">if</span> (code == <span class="number">204</span> || code == <span class="number">205</span>) &#123;</span><br><span class="line">     rawBody.close();</span><br><span class="line">     <span class="keyword">return</span> Response.success(<span class="keyword">null</span>, rawResponse);</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   ExceptionCatchingRequestBody catchingBody = <span class="keyword">new</span> ExceptionCatchingRequestBody(rawBody);</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">     T body = serviceMethod.toResponse(catchingBody);</span><br><span class="line">     <span class="keyword">return</span> Response.success(body, rawResponse);</span><br><span class="line">   &#125; <span class="keyword">catch</span> (RuntimeException e) &#123;</span><br><span class="line">     <span class="comment">// If the underlying source threw an exception, propagate that rather than indicating it was</span></span><br><span class="line">     <span class="comment">// a runtime exception.</span></span><br><span class="line">     catchingBody.throwIfCaught();</span><br><span class="line">     <span class="keyword">throw</span> e;</span><br><span class="line">   &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<pre><code>我们来看这一句
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">T body = serviceMethod.toResponse(catchingBody);</span><br></pre></td></tr></table></figure>
+
+
+往上追溯到头可以知道，实际代码如下
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">Converter&lt;ResponseBody, T&gt; <span class="title">nextResponseBodyConverter</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">     @Nullable Converter.Factory skipPast, Type type, Annotation[] annotations)</span> </span>&#123;</span><br><span class="line">   checkNotNull(type, <span class="string">"type == null"</span>);</span><br><span class="line">   checkNotNull(annotations, <span class="string">"annotations == null"</span>);</span><br><span class="line"></span><br><span class="line">   <span class="keyword">int</span> start = converterFactories.indexOf(skipPast) + <span class="number">1</span>;</span><br><span class="line">   <span class="keyword">for</span> (<span class="keyword">int</span> i = start, count = converterFactories.size(); i &lt; count; i++) &#123;</span><br><span class="line">     Converter&lt;ResponseBody, ?&gt; converter =</span><br><span class="line">         converterFactories.get(i).responseBodyConverter(type, annotations, <span class="keyword">this</span>);</span><br><span class="line">     <span class="keyword">if</span> (converter != <span class="keyword">null</span>) &#123;</span><br><span class="line">       <span class="comment">//noinspection unchecked</span></span><br><span class="line">       <span class="keyword">return</span> (Converter&lt;ResponseBody, T&gt;) converter;</span><br><span class="line">     &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+
+也就是我们常设置的GsonConverterFactory会在这里被取用，并对真正的response做解析。
+
+至此一个完整的网络请求以及参数的解析都完整结束了
+</code></pre><h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ol>
+<li>Retrofit本身就是个适配器，用以协调资源</li>
+<li>动态代码模式，每个请求都是动态生成</li>
+<li>静态代理模式，如返回给我们的ExecutorCallbackCall，实际是对内部Call一个代理对象</li>
+<li>builder模式，简化对象的构建</li>
+<li>使用了工厂模式，同时提高了代码的定制性</li>
+<li>适配器模式，将原始的响应适配成实际需要的类型</li></ol>
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <br>
+        <div>
+    
+        <div style="text-align:center;color:#ccc;font-size:14px">-------------THE END-------------</div>
+    
+</div>
+      </div>
+    
+
+    <div>
+      
+        <br>
+        
+<style>.my_post_copyright{padding:1px 0 1px 20px!important;margin-left:5px;border-left:3px solid #ed3726}.my_post_copyright p{line-height:1.5;margin:10px 0}.my_post_copyright p span{font-weight:700;padding-right:15px}</style>
+<div class="my_post_copyright">
+  <p><span>本文标题:</span><a href="/Retrofit源码分析20171130/">Retrofit源码分析</a></p>
+  <p><span>文章作者:</span><a href="/" title="访问 Lebens 的个人博客">Lebens</a></p>
+  <p><span>发布时间:</span>2017年11月30日 - 09:11</p>
+  <p><span>最后更新:</span>2018年01月10日 - 18:01</p>
+  <p><span>原始链接:</span><a href="/Retrofit源码分析20171130/" title="Retrofit源码分析">http://lebens.top/Retrofit源码分析20171130/</a>
+    <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://lebens.top/Retrofit源码分析20171130/" aria-label="复制成功！"></i></span>
+  </p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
+</div>
+<script>var clipboard=new Clipboard(".fa-clipboard");clipboard.on("success",$(function(){$(".fa-clipboard").click(function(){swal({title:"",text:"复制成功",html:!1,timer:500,showConfirmButton:!1})})}))</script>
+
+      
+    </div>
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/retrofit/" rel="tag"># retrofit</a>
+          
+            <a href="/tags/okhttp/" rel="tag"># okhttp</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/EventBus3.0源码分析20171123/" rel="next" title="EventBus3.0源码分析">
+                <i class="fa fa-chevron-left"></i> EventBus3.0源码分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/Android-Studio如何将一个project引用为module20171130/" rel="prev" title="Android Studio如何将一个project引用为module">
+                Android Studio如何将一个project引用为module <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars1.githubusercontent.com/u/10048597?v=4" alt="Lebens">
+            
+              <p class="site-author-name" itemprop="name">Lebens</p>
+              <p class="site-description motion-element" itemprop="description">我相信，梦里能到达的地方，总有一天，脚步也能到达</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/shuangpinai" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.csdn.net/zzhouqianq" title="易凌风" target="_blank">易凌风</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://cdevlab.top/" title="chendong" target="_blank">chendong</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是Retrofit"><span class="nav-number">1.</span> <span class="nav-text">什么是Retrofit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Retrofit的实现"><span class="nav-number">2.</span> <span class="nav-text">Retrofit的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#Retrofit"><span class="nav-number">2.0.1.</span> <span class="nav-text">Retrofit</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Call"><span class="nav-number">2.0.2.</span> <span class="nav-text">Call</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Converter"><span class="nav-number">2.0.3.</span> <span class="nav-text">Converter</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#CallAdapter"><span class="nav-number">2.0.4.</span> <span class="nav-text">CallAdapter</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#ServiceMethod"><span class="nav-number">2.0.5.</span> <span class="nav-text">ServiceMethod</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#ParameterHandler"><span class="nav-number">2.0.6.</span> <span class="nav-text">ParameterHandler</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#RequestBuilder"><span class="nav-number">2.0.7.</span> <span class="nav-text">RequestBuilder</span></a></li></ol></li></ol><li class="nav-item nav-level-3"><a class="nav-link" href="#Retrofit发起请求的过程"><span class="nav-number">3.</span> <span class="nav-text">Retrofit发起请求的过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#请求的梳理"><span class="nav-number">4.</span> <span class="nav-text">请求的梳理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></div>
+            
+
+          </div>
+        </section>
+      
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+  <i class="fa fa-star"></i>
+</span>
+  <span class="author" itemprop="copyrightHolder">Lebens</span>
+</div>
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">function proceedsearch(){$("body").append('<div class="search-popup-overlay local-search-pop-overlay"></div>').css("overflow","hidden"),$(".search-popup-overlay").click(onPopupClose),$(".popup").toggle();var t=$("#local-search-input");t.attr("autocapitalize","none"),t.attr("autocorrect","off"),t.focus()}var isfetched=!1,isXml=!0,search_path="search.xml";0===search_path.length?search_path="search.xml":/json$/i.test(search_path)&&(isXml=!1);var path="/"+search_path,onPopupClose=function(t){$(".popup").hide(),$("#local-search-input").val(""),$(".search-result-list").remove(),$("#no-result").remove(),$(".local-search-pop-overlay").remove(),$("body").css("overflow","")},searchFunc=function(t,e,o){"use strict";$("body").append('<div class="search-popup-overlay local-search-pop-overlay"><div id="search-loading-icon"><i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i></div></div>').css("overflow","hidden"),$("#search-loading-icon").css("margin","20% auto 0 auto").css("text-align","center"),$.ajax({url:t,dataType:isXml?"xml":"json",async:!0,success:function(t){isfetched=!0,$(".popup").detach().appendTo(".header-inner");var n=isXml?$("entry",t).map(function(){return{title:$("title",this).text(),content:$("content",this).text(),url:$("url",this).text()}}).get():t,r=document.getElementById(e),s=document.getElementById(o),a=function(){var t=r.value.trim().toLowerCase(),e=t.split(/[\s\-]+/);e.length>1&&e.push(t);var o=[];if(t.length>0&&n.forEach(function(n){var r=!1,s=0,a=0,i=n.title.trim(),c=i.toLowerCase(),l=n.content.trim().replace(/<[^>]+>/g,""),h=l.toLowerCase(),p=decodeURIComponent(n.url),u=[],f=[];if(""!=i&&(e.forEach(function(t){function e(t,e,o){var n=t.length;if(0===n)return[];var r=0,s=[],a=[];for(o||(e=e.toLowerCase(),t=t.toLowerCase());(s=e.indexOf(t,r))>-1;)a.push({position:s,word:t}),r=s+n;return a}u=u.concat(e(t,c,!1)),f=f.concat(e(t,h,!1))}),(u.length>0||f.length>0)&&(r=!0,s=u.length+f.length)),r){[u,f].forEach(function(t){t.sort(function(t,e){return e.position!==t.position?e.position-t.position:t.word.length-e.word.length})});function d(e,o,n,r){for(var s=r[r.length-1],i=s.position,c=s.word,l=[],h=0;i+c.length<=n&&0!=r.length;){c===t&&h++,l.push({position:i,length:c.length});var p=i+c.length;for(r.pop();0!=r.length&&(s=r[r.length-1],i=s.position,c=s.word,p>i);)r.pop()}return a+=h,{hits:l,start:o,end:n,searchTextCount:h}}var g=[];0!=u.length&&g.push(d(0,0,i.length,u));for(var v=[];0!=f.length;){var $=f[f.length-1],C=$.position,m=$.word,x=C-20,w=C+80;x<0&&(x=0),w<C+m.length&&(w=C+m.length),w>l.length&&(w=l.length),v.push(d(0,x,w,f))}v.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hits.length!==e.hits.length?e.hits.length-t.hits.length:t.start-e.start});var y=parseInt("1");y>=0&&(v=v.slice(0,y));function T(t,e){var o="",n=e.start;return e.hits.forEach(function(e){o+=t.substring(n,e.position);var r=e.position+e.length;o+='<b class="search-keyword">'+t.substring(e.position,r)+"</b>",n=r}),o+=t.substring(n,e.end)}var b="";0!=g.length?b+="<li><a href='"+p+"' class='search-result-title'>"+T(i,g[0])+"</a>":b+="<li><a href='"+p+"' class='search-result-title'>"+i+"</a>",v.forEach(function(t){b+="<a href='"+p+'\'><p class="search-result">'+T(l,t)+"...</p></a>"}),b+="</li>",o.push({item:b,searchTextCount:a,hitCount:s,id:o.length})}}),1===e.length&&""===e[0])s.innerHTML='<div id="no-result"><i class="fa fa-search fa-5x" /></div>';else if(0===o.length)s.innerHTML='<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>';else{o.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hitCount!==e.hitCount?e.hitCount-t.hitCount:e.id-t.id});var a='<ul class="search-result-list">';o.forEach(function(t){a+=t.item}),a+="</ul>",s.innerHTML=a}};r.addEventListener("input",a),$(".local-search-pop-overlay").remove(),$("body").css("overflow",""),proceedsearch()}})};$(".popup-trigger").click(function(t){t.stopPropagation(),!1===isfetched?searchFunc(path,"local-search-input","local-search-result"):proceedsearch()}),$(".popup-btn-close").click(onPopupClose),$(".popup").click(function(t){t.stopPropagation()}),$(document).on("keyup",function(t){27===t.which&&$(".search-popup").is(":visible")&&onPopupClose()})</script></div></body></header></html>
