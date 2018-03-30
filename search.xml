@@ -1,6 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[java解析与分派.md]]></title>
+    <url>%2Fjava%E8%A7%A3%E6%9E%90%E4%B8%8E%E5%88%86%E6%B4%BE-md20180323%2F</url>
+    <content type="text"><![CDATA[本文的目的近期在看java虚拟机相关的知识点，写下此文记录近期所学知识点。什么是静态解析静态解析指的是方法在程序真正执行前就有一个可确定的版本，并且这个方法的调用版本在运行期是不可变的，也就是调用目标在编译器进行编译时就必须确定下来，也即要求一个方法“编译器可知，运行期不可变”。在java中符合静态解析要求的方法主要有两大类，分别是静态方法和私有方法。私有方法不能被继承，静态方法不能被重写，这两个限制可以确定这些方法都只有唯一的版本，不存在方法的重写，这使得他们能被静态解析。Java虚拟机里共提供了四条方法调用字节指令，分别是invokestatic：调用静态方法。invokespecial：调用实例构造器方法、私有方法和父类方法。invokevirtual：调用所有的虚方法。invokeinterface：调用接口方法，会在运行时再确定一个实现此接口的对象。只要能被invokestatic和invokespecial指令调用的方法，都可以在解析阶段确定唯一的调用方法，符合这一条件的有静态方法、私有方法、实例构造器方法以及父类方法。这些方法包括final方法在内统称为非虚方法，与之相反的其他方法称之为虚方法final方法，虽然是被invokevirtual调用，但是由于其无法被覆写，可以在编译时期被编译器完全确定，所以也被当作非虚方法，Java语言规范中也明确说明了final方法是一种非虚方法。什么是分派相对于非虚方法，虚方法由于存在重载和覆写，方法的引用可能无法在编译器直接确定。分派根据调用时期，可以分为静态分派和动态分派，同时根据宗量数（方法的调用者和方法的型参统称为方法的宗量数）区分又可以分为单分派和多分派，组合可以分为静态单分派、静态多分派、动态单分派、动态多分派四种情况。####静态分派先说结论：对于重载的方法，javac是通过形参的静态类型（静态类型编译期可知）来区分使用哪个重载版本，这就是静态分派123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051public class SampleCode &#123; public static void main(String[] args) &#123; SampleCode sampleCode = new SampleCode(); Human human = new Human(); Human man = new Man(); Human woman = new Woman(); sampleCode.someOneSayHi(human); sampleCode.someOneSayHi(man); sampleCode.someOneSayHi(woman); human.sayHi(); man.sayHi(); woman.sayHi(); &#125; public void someOneSayHi(Human human) &#123; System.out.println("human say hi"); &#125; public void someOneSayHi(Man man) &#123; System.out.println("man say hi"); &#125; public void someOneSayHi(Woman woman) &#123; System.out.println("woman say hi"); &#125; public static class Human &#123; public void sayHi() &#123; System.out.println("I'm a human"); &#125; &#125; public static class Man extends Human &#123; @Override public void sayHi() &#123; System.out.println("I'm a man"); &#125; &#125; public static class Woman extends Human &#123; @Override public void sayHi() &#123; System.out.println("I'm a woman"); &#125; &#125;&#125; 在调用someOneSayHi()时，代码执行结果如下： 123human say hihuman say hihuman say hi 看代码，编译器是如何区分该调用哪个重载方法的呢，看这句 1Human man = new Man(); 这里Human表示man这个变量的静态类型，Man表示变量的实际类型。这两个类型在代码运行过程中都可以发生变化，静态类型仅在使用时发生变化，但是变量的类型并不会变化，同时最终的静态类型在编译器可知，实际类型则不同，需要到运行期才能确定。 从上可知，代码中的human、man、woman三个变量的静态类型都是Human，同时编译期可知，调用者又同为sampleCode，根据宗量数区分，调用哪个重载方法完全根据方法的静态类型来区分，可以判定调用someOneSayHi(Human human)这个重载方法。 ####动态分派 在运行时根据变量的实际类型来确定是否向上转型调用子类方法的分派过程称为动态分派 在调用sayHi()时，代码执行结果如下： 123I'm a humanI'm a manI'm a woman 在判断调用子类还是父类方法时，如果只根据方法的静态类型来区分，无论如何都只会调用到父类的方法中。实际是根据子类不同调用的是不同子类中的覆写方法。 ####单分派和多分派 多分派是指根据方法的宗量（方法的调用者和方法的参数）来判定调用哪个方法，当一个方法的调用有多于一个宗量时的分派叫做多分派。 根据上面的分析可以知道 对于重载方法，其判定的宗量有调用者这个动态类型和方法的参数两个宗量，java的静态分派是多分派。 对于覆写方法，其判定的宗量只有调用者（是父类还是子类）这个动态类型宗量，java是动态分派是单分派。 #####参考文献 【深入Java虚拟机】之五：多态性实现机制——静态分派与动态分派]]></content>
+      <categories>
+        <category>java</category>
+      </categories>
+      <tags>
+        <tag>java</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[Java8 Lambda表达式入门]]></title>
+    <url>%2FJava8-Lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%85%A5%E9%97%A820180308%2F</url>
+    <content type="text"><![CDATA[本文的目的在于快速的了解java 8 中lambda新特性，同时会对jdk中一些常用的api做介绍]]></content>
+      <categories>
+        <category>java</category>
+      </categories>
+      <tags>
+        <tag>lambda</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[git 基本命令行]]></title>
     <url>%2Fgit-%E5%9F%BA%E6%9C%AC%E5%91%BD%E4%BB%A4%E8%A1%8C20171212%2F</url>
     <content type="text"><![CDATA[本文主要对一些常用的git命令行进行了分类汇总初始化仓库1git init 文件添加到暂存区1git add test.txt 文件提交1git commit -m "test file commint" 文件删除1git rm test.txt 与远程仓库关联1git remote add origin git@server-name:path/repo-name.git push内容到远程分支123git push -u origin master (首次提交，将本地git默认创建的master分支跟远程代码库关联，并push)git push origin master（后续提交，如若远端没有这个分支，则自动新建分支） 版本回滚git reset 共有3种模式，分别是 git reset –mixed 保留现有工作区，但是会用指定的commit覆盖暂存区。 git reset –soft 保留暂存区，但是会清空工作区。 git reset –hard 简单粗暴，直接使用指定的commit的内容覆盖stage区以及工作区。 12345git reset --hard HEAD^ 回滚到上一版本git reset --hard HEAD^^ 回滚前到两个版本 git reset --hard 123456578 回滚到指定哈希值的版本号 撤销修改 尚未add的文件撤销修改 1git checkout -- test.txt (撤销当前工作区的修改，返回最新暂存区的内容) 针对于已经add到暂存区的文件 123git reset HEAD test.txt (回滚) git checkout -- test.txt (并丢弃) 针对已经commit，但是尚未push到远端的文件 1git reset --hard HEAD^ 回滚到上一版本 分支 查看当前分支 1git branch 新建分支 12345git checkout -b dev (新建并切换)git branch dev （新建分支）git checkout -b branch-name origin/branch-name(新建与远端对应的分支) 删除分支 12345678910111213 git branch -d dev git branch -D dev (忽略警告，强制删除) git fetch -p (删除没有远程对应分支的本地分支) git push --delete origin dev (删除远程分支) ``` - 切换分支 ```java git checkout master 合并分支(merge以及rebase两种) 123git merge dev (假设当前在master分支，则表示将dev合并到master上)git rebase dev(同上) 本地分支和远程分支做关联 1git branch --set-upstream dev origin/dev 拉取远端最新代码 123456789 git pull ``` ##### tag管理- 新建tag ```java git tag v1.0.0 指定commit上添加tag 123git tag v1.0.0 xxxxxxgit tag -a v1.0.0 -m "add version 1.0.0 tag" xxxxxx (带提交的信息) 查看所有tag 1git tag 查看tag信息 1git show v1.0.0 删除tag 123git tag -d v1.0.0 （删除本地）git push origin :refs/tags/v1.0.0 (再删除远端的tag) push tag至远端 123git push origin v1.0.0 (push 指定tag)git push origin --tags (push所有tag) 获取远端tag 12345git fetch origin tag v1.0.0 (更新tag)git pull --tags (获取远端所有的tag)git pull --all (用于解决远端tag无法再本地显示的问题) 参考文献廖雪峰的官网-Git教程]]></content>
