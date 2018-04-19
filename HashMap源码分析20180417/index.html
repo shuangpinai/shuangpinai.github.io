@@ -1,0 +1,442 @@
+<!DOCTYPE html><html class="theme-next mist use-motion" lang="zh-CN"><header id="header" class="header" itemscope itemtype="//schema.org/WPHeader"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="theme-color" content="#222"><script></script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"><link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css"><link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3"><link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222"><meta name="keywords" content="java集合,"><meta name="description" content="本文针对HashMap源码中的一些重要方法做讲解。"><meta name="keywords" content="java集合"><meta property="og:type" content="article"><meta property="og:title" content="HashMap源码分析"><meta property="og:url" content="http://lebens.top/HashMap源码分析20180417/index.html"><meta property="og:site_name" content="Lebens"><meta property="og:description" content="本文针对HashMap源码中的一些重要方法做讲解。"><meta property="og:locale" content="zh-CN"><meta property="og:updated_time" content="2018-04-19T01:48:35.675Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="HashMap源码分析"><meta name="twitter:description" content="本文针对HashMap源码中的一些重要方法做讲解。"><script type="text/javascript" id="hexo.configurations">var NexT=window.NexT||{},CONFIG={root:"/",scheme:"Mist",version:"5.1.3",sidebar:{position:"left",display:"post",offset:12,b2t:!1,scrollpercent:!1,onmobile:!1},fancybox:!0,tabs:!0,motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"slideDownIn",post_body:"slideDownIn",coll_header:"slideLeftIn",sidebar:"slideUpIn"}},duoshuo:{userId:"0",author:"博主"},algolia:{applicationID:"",apiKey:"",indexName:"",hits:{per_page:10},labels:{input_placeholder:"Search for Posts",hits_empty:"We didn't find any results for the search: ${query}",hits_stats:"${hits} results found in ${time} ms"}}}</script><link rel="canonical" href="http://lebens.top/HashMap源码分析20180417/"><title>HashMap源码分析 | Lebens</title><style>.forkme{display:none}@media (min-width:768px){.forkme{display:inline}}</style></head><body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN"><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="forkme"><a target="_blank" href="https://github.com/shuangpinai"><img style="position:absolute;top:0;left:0;border:0" src="https://camo.githubusercontent.com/567c3a48d796e2fc06ea80409cc9dd82bf714434/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"></a></div><header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-wrapper"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Lebens</span> <span class="logo-line-after"><i></i></span></a></div><p class="site-subtitle"></p></div><div class="site-nav-toggle"><button><span class="btn-bar"></span> <span class="btn-bar"></span> <span class="btn-bar"></span></button></div></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br>主页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i><br>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br>日志</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于我</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class="site-search"><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class="search-icon"><i class="fa fa-search"></i> </span><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span><div class="local-search-input-wrapper"><input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input"></div></div><div id="local-search-result"></div></div></div></nav><script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script><link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet"><style>.pace .pace-progress{background:#00d9cf;height:2px}.pace .pace-progress-inner{box-shadow:0 0 10px #1e92fb,0 0 5px #1e92fb}.pace .pace-activity{border-top-color:#1e92fb;border-left-color:#1e92fb}</style></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><div id="posts" class="posts-expand"><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><div class="post-block"><link itemprop="mainEntityOfPage" href="http://lebens.top/HashMap源码分析20180417/"><span hidden itemprop="author" itemscope itemtype="http://schema.org/Person"><meta itemprop="name" content="Lebens"><meta itemprop="description" content=""><meta itemprop="image" content="https://avatars1.githubusercontent.com/u/10048597?v=4"></span><span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization"><meta itemprop="name" content="Lebens"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">HashMap源码分析</h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i> </span><span class="post-meta-item-text">发表于</span> <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-17T16:45:56+08:00">2018-04-17 </time></span><span class="post-category"><span class="post-meta-divider">|</span> <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i> </span><span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a></span></span></div></header><div class="post-body" itemprop="articleBody"><p>本文针对HashMap源码中的一些重要方法做讲解。</p><a id="more"></a><p>Android中的HashMap与java中HashMap实现有差异，这里以Android的源码为例进行讲解。</p><h3 id="成员变量说明"><a href="#成员变量说明" class="headerlink" title="成员变量说明"></a>成员变量说明</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>. <span class="keyword">int</span> DEFAULT_INITIAL_CAPACITY = <span class="number">4</span>；<span class="comment">//默认初始化的容量</span></span><br><span class="line"><span class="number">2</span>. <span class="keyword">int</span> MAXIMUM_CAPACITY = <span class="number">1</span> &lt;&lt; <span class="number">30</span>; <span class="comment">//HashMap最大的容量</span></span><br><span class="line"><span class="number">3</span>. <span class="keyword">float</span> DEFAULT_LOAD_FACTOR = <span class="number">0.75f</span>; <span class="comment">//判断是否扩容时用的计算因子</span></span><br><span class="line"><span class="number">4</span>. <span class="keyword">int</span> threshold ; <span class="comment">//用于比较是否该扩容，其值为 capacity * load factor</span></span><br><span class="line"><span class="number">5</span>. <span class="keyword">int</span> size; <span class="comment">//当前存储的数据容量</span></span><br><span class="line"><span class="number">6</span>. HashMapEntry&lt;K,V&gt;[] table = (HashMapEntry&lt;K,V&gt;[]) EMPTY_TABLE;<span class="comment">//数据存储在这</span></span><br></pre></td></tr></table></figure>
+<h4 id="成员变量table"><a href="#成员变量table" class="headerlink" title="成员变量table"></a>成员变量table</h4><p>HashMap内部实现的是Map.Entry<k ,v=""> 的，数据以数组形式保存的链表。</k></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">transient</span> HashMapEntry&lt;K,V&gt;[] table = (HashMapEntry&lt;K,V&gt;[]) EMPTY_TABLE;</span><br></pre></td></tr></table></figure>
+<p>看一下HashMapEntry里面的代码，很简单：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">/** <span class="doctag">@hide</span> */</span>  <span class="comment">// Android added.</span></span><br><span class="line">   <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">HashMapEntry</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt; <span class="keyword">implements</span> <span class="title">Map</span>.<span class="title">Entry</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt; </span>&#123;</span><br><span class="line">       <span class="keyword">final</span> K key;</span><br><span class="line">       V value;</span><br><span class="line">       HashMapEntry&lt;K,V&gt; next;</span><br><span class="line">       <span class="keyword">int</span> hash;</span><br><span class="line">       </span><br><span class="line">       ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>保存了数据的key、value、hash以及以及下一个数据，就是典型的链表储存形式。至于put进来的数据，如何确定保存在table中的位置，请看下文。</p>
+<h3 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h3><p>构造函数主要对初始化容量以及加载因子做了参数校验，以符合后续的操作</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Constructs an empty &lt;tt&gt;HashMap&lt;/tt&gt; with the specified initial</span></span><br><span class="line"><span class="comment">   * capacity and load factor.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span>  initialCapacity the initial capacity</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span>  loadFactor      the load factor</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span> IllegalArgumentException if the initial capacity is negative</span></span><br><span class="line"><span class="comment">   *         or the load factor is nonpositive</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">HashMap</span><span class="params">(<span class="keyword">int</span> initialCapacity, <span class="keyword">float</span> loadFactor)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (initialCapacity &lt; <span class="number">0</span>)</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Illegal initial capacity: "</span> +</span><br><span class="line">                                             initialCapacity);</span><br><span class="line">                                             </span><br><span class="line">      <span class="comment">//初始化容量                                       </span></span><br><span class="line">      <span class="keyword">if</span> (initialCapacity &gt; MAXIMUM_CAPACITY) &#123;</span><br><span class="line">          initialCapacity = MAXIMUM_CAPACITY;</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (initialCapacity &lt; DEFAULT_INITIAL_CAPACITY) &#123;</span><br><span class="line">          initialCapacity = DEFAULT_INITIAL_CAPACITY;</span><br><span class="line">      &#125;</span><br><span class="line">	</span><br><span class="line"><span class="comment">//校验加载因子的准确性</span></span><br><span class="line">      <span class="keyword">if</span> (loadFactor &lt;= <span class="number">0</span> || Float.isNaN(loadFactor))</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Illegal load factor: "</span> +</span><br><span class="line">                                             loadFactor);</span><br><span class="line">      <span class="comment">// Android-Note: We always use the default load factor of 0.75f.</span></span><br><span class="line"></span><br><span class="line">      <span class="comment">// This might appear wrong but it's just awkward design. We always call</span></span><br><span class="line">      <span class="comment">// inflateTable() when table == EMPTY_TABLE. That method will take "threshold"</span></span><br><span class="line">      <span class="comment">// to mean "capacity" and then replace it with the real threshold (i.e, multiplied with</span></span><br><span class="line">      <span class="comment">// the load factor).</span></span><br><span class="line">      </span><br><span class="line">      <span class="comment">//默认扩容的阀值就是初始的容量</span></span><br><span class="line">      threshold = initialCapacity;</span><br><span class="line">      init();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Constructs an empty &lt;tt&gt;HashMap&lt;/tt&gt; with the specified initial</span></span><br><span class="line"><span class="comment">   * capacity and the default load factor (0.75).</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span>  initialCapacity the initial capacity.</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@throws</span> IllegalArgumentException if the initial capacity is negative.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">HashMap</span><span class="params">(<span class="keyword">int</span> initialCapacity)</span> </span>&#123;</span><br><span class="line">      <span class="keyword">this</span>(initialCapacity, DEFAULT_LOAD_FACTOR);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Constructs an empty &lt;tt&gt;HashMap&lt;/tt&gt; with the default initial capacity</span></span><br><span class="line"><span class="comment">   * (16) and the default load factor (0.75).</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">HashMap</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">this</span>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="数据put操作"><a href="#数据put操作" class="headerlink" title="数据put操作"></a>数据put操作</h3><p>最基本的数据保存的方法，下面细分讲解:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> V <span class="title">put</span><span class="params">(K key, V value)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (table == EMPTY_TABLE) &#123;</span><br><span class="line">           inflateTable(threshold);</span><br><span class="line">       &#125;</span><br><span class="line">       <span class="keyword">if</span> (key == <span class="keyword">null</span>)</span><br><span class="line">           <span class="keyword">return</span> putForNullKey(value);</span><br><span class="line">       <span class="keyword">int</span> hash = sun.misc.Hashing.singleWordWangJenkinsHash(key);</span><br><span class="line">       <span class="keyword">int</span> i = indexFor(hash, table.length);</span><br><span class="line">       <span class="keyword">for</span> (HashMapEntry&lt;K,V&gt; e = table[i]; e != <span class="keyword">null</span>; e = e.next) &#123;</span><br><span class="line">           Object k;</span><br><span class="line">           <span class="keyword">if</span> (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k))) &#123;</span><br><span class="line">               V oldValue = e.value;</span><br><span class="line">               e.value = value;</span><br><span class="line">               e.recordAccess(<span class="keyword">this</span>);</span><br><span class="line">               <span class="keyword">return</span> oldValue;</span><br><span class="line">           &#125;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">       modCount++;</span><br><span class="line">       addEntry(hash, key, value, i);</span><br><span class="line">       <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>操作流程如下：</strong></p>
+<ol>
+<li>内部回判断当前table是否为空，为空则初始化table，</li>
+<li>table不为空，则查询当前的key是否在table中有保存，有则用新value替换旧value，并返回旧value</li>
+<li>若当前key未保存数据，则创建新的entry进行保存（中间有一步扩容的操作）</li>
+</ol>
+<h4 id="table初始化"><a href="#table初始化" class="headerlink" title="table初始化"></a>table初始化</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">   <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Inflates the table.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">inflateTable</span><span class="params">(<span class="keyword">int</span> toSize)</span> </span>&#123;</span><br><span class="line">      <span class="comment">// Find a power of 2 &gt;= toSize</span></span><br><span class="line">      </span><br><span class="line">      <span class="comment">//取最靠近（大于等于）toSize的2的整数倍值</span></span><br><span class="line">      <span class="keyword">int</span> capacity = roundUpToPowerOf2(toSize);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// Android-changed: Replace usage of Math.min() here because this method is</span></span><br><span class="line">      <span class="comment">// called from the &lt;clinit&gt; of runtime, at which point the native libraries</span></span><br><span class="line">      <span class="comment">// needed by Float.* might not be loaded.</span></span><br><span class="line">      <span class="keyword">float</span> thresholdFloat = capacity * loadFactor;</span><br><span class="line">      <span class="keyword">if</span> (thresholdFloat &gt; MAXIMUM_CAPACITY + <span class="number">1</span>) &#123;</span><br><span class="line">          thresholdFloat = MAXIMUM_CAPACITY + <span class="number">1</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//真正初始化临界值</span></span><br><span class="line">      threshold = (<span class="keyword">int</span>) thresholdFloat;</span><br><span class="line">      table = <span class="keyword">new</span> HashMapEntry[capacity];</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>看一下里面取2整数倍的方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">roundUpToPowerOf2</span><span class="params">(<span class="keyword">int</span> number)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// assert number &gt;= 0 : "number must be non-negative";</span></span><br><span class="line">    <span class="keyword">int</span> rounded = number &gt;= MAXIMUM_CAPACITY</span><br><span class="line">            ? MAXIMUM_CAPACITY</span><br><span class="line">            : (rounded = Integer.highestOneBit(number)) != <span class="number">0</span><span class="comment">//最高位为0，直接返回1</span></span><br><span class="line">                ? (Integer.bitCount(number) &gt; <span class="number">1</span>) ? rounded &lt;&lt; <span class="number">1</span> : rounded<span class="comment">//如果高位1的个数大于1，肯定不是2的整数倍，rounded扩大一倍，保证比number大</span></span><br><span class="line">                : <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> rounded;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对于里面Integer.bitCount()不理解的同学可以参考这篇文章</p>
+<p><a href="https://blog.csdn.net/cor_twi/article/details/53720640" target="_blank" rel="noopener">Integer.bitCount实现过程</a>  </p>
+<h4 id="value存储"><a href="#value存储" class="headerlink" title="value存储"></a>value存储</h4><p>对key进行判断，若key为null则存储到table的第一位，否则查找应该存储的位置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> hash = sun.misc.Hashing.singleWordWangJenkinsHash(key);</span><br><span class="line"><span class="keyword">int</span> i = indexFor(hash, table.length);</span><br></pre></td></tr></table></figure>
+<p>每次put以及get都会用到上面2个方法，hash值用于确定entry在table中的位置</p>
+<p>看一下indexFor()</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Returns index for hash code h.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">indexFor</span><span class="params">(<span class="keyword">int</span> h, <span class="keyword">int</span> length)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// assert Integer.bitCount(length) == 1 : "length must be a non-zero power of 2";</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">//上文可以知道table的length一定为2的倍数，这里length-1转换成二进制的时候可以肯定所有的位数都为1，</span></span><br><span class="line">        <span class="comment">//h &amp; (length-1)可以保证不同的hash值在table里分布</span></span><br><span class="line">        <span class="keyword">return</span> h &amp; (length-<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">```	</span><br><span class="line">	</span><br><span class="line">获取到index之后，去查找对应的链表，并循环遍历是否有保存的value，有则替换，否则插入新数据</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">	<span class="keyword">for</span> (HashMapEntry&lt;K,V&gt; e = table[i]; e != <span class="keyword">null</span>; e = e.next) &#123;</span><br><span class="line">        Object k;</span><br><span class="line">        <span class="keyword">if</span> (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k))) &#123;</span><br><span class="line">            V oldValue = e.value;</span><br><span class="line">            e.value = value;</span><br><span class="line">            e.recordAccess(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">return</span> oldValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>来看一下插入数据的操作</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">	    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Adds a new entry with the specified key, value and hash code to</span></span><br><span class="line"><span class="comment">     * the specified bucket.  It is the responsibility of this</span></span><br><span class="line"><span class="comment">     * method to resize the table if appropriate.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * Subclass overrides this to alter the behavior of put method.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">addEntry</span><span class="params">(<span class="keyword">int</span> hash, K key, V value, <span class="keyword">int</span> bucketIndex)</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    	<span class="comment">//这里用到了上面提到的threshold，到达临界值，同时当前插入的位置上有链表后，进行扩容，并将数据重新存入（length改变后，同一个hash值通过indexFor()计算得到的位置可能会变）</span></span><br><span class="line">        <span class="keyword">if</span> ((size &gt;= threshold) &amp;&amp; (<span class="keyword">null</span> != table[bucketIndex])) &#123;</span><br><span class="line">            resize(<span class="number">2</span> * table.length);</span><br><span class="line">            hash = (<span class="keyword">null</span> != key) ? sun.misc.Hashing.singleWordWangJenkinsHash(key) : <span class="number">0</span>;</span><br><span class="line">            bucketIndex = indexFor(hash, table.length);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        createEntry(hash, key, value, bucketIndex);</span><br><span class="line">    &#125;</span><br><span class="line">```	</span><br><span class="line">	</span><br><span class="line">### 数据get操作</span><br><span class="line"></span><br><span class="line">相对put操作，get就比较简单了</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">	    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * Returns the entry associated with the specified key in the</span></span><br><span class="line"><span class="comment">     * HashMap.  Returns null if the HashMap contains no mapping</span></span><br><span class="line"><span class="comment">     * for the key.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">final</span> Entry&lt;K,V&gt; <span class="title">getEntry</span><span class="params">(Object key)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (size == <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 找到table中的链表位置后遍历循环比较取出数据即可</span></span><br><span class="line">        <span class="keyword">int</span> hash = (key == <span class="keyword">null</span>) ? <span class="number">0</span> : sun.misc.Hashing.singleWordWangJenkinsHash(key);</span><br><span class="line">        <span class="keyword">for</span> (HashMapEntry&lt;K,V&gt; e = table[indexFor(hash, table.length)];</span><br><span class="line">             e != <span class="keyword">null</span>;</span><br><span class="line">             e = e.next) &#123;</span><br><span class="line">            Object k;</span><br><span class="line">            <span class="keyword">if</span> (e.hash == hash &amp;&amp;</span><br><span class="line">                ((k = e.key) == key || (key != <span class="keyword">null</span> &amp;&amp; key.equals(k))))</span><br><span class="line">                <span class="keyword">return</span> e;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="遍历"><a href="#遍历" class="headerlink" title="遍历"></a>遍历</h3><p>遍历的方法主要有3个</p>
+<ol>
+<li>keySet();</li>
+<li>values();</li>
+<li>entrySet();</li>
+</ol>
+<p>这三个方法内部都是用的各自实现的HashIterator来进行遍历</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">private</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">HashIterator</span>&lt;<span class="title">E</span>&gt; <span class="keyword">implements</span> <span class="title">Iterator</span>&lt;<span class="title">E</span>&gt; </span>&#123;</span><br><span class="line">    HashMapEntry&lt;K,V&gt; next;        <span class="comment">// next entry to return</span></span><br><span class="line">    <span class="keyword">int</span> expectedModCount;   <span class="comment">// For fast-fail</span></span><br><span class="line">    <span class="keyword">int</span> index;              <span class="comment">// current slot</span></span><br><span class="line">    HashMapEntry&lt;K,V&gt; current;     <span class="comment">// current entry</span></span><br><span class="line"></span><br><span class="line">    HashIterator() &#123;</span><br><span class="line">        expectedModCount = modCount;</span><br><span class="line">        <span class="keyword">if</span> (size &gt; <span class="number">0</span>) &#123; <span class="comment">// advance to first entry</span></span><br><span class="line">            HashMapEntry[] t = table;</span><br><span class="line">            <span class="comment">//找到第一个不为null的HashMapEntry</span></span><br><span class="line">            <span class="keyword">while</span> (index &lt; t.length &amp;&amp; (next = t[index++]) == <span class="keyword">null</span>)</span><br><span class="line">                ;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">hasNext</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> next != <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">final</span> Entry&lt;K,V&gt; <span class="title">nextEntry</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (modCount != expectedModCount)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ConcurrentModificationException();</span><br><span class="line">        HashMapEntry&lt;K,V&gt; e = next;</span><br><span class="line">        <span class="keyword">if</span> (e == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> NoSuchElementException();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((next = e.next) == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">//如果当前链表遍历完了，则查找下一个不为null的链表的位置</span></span><br><span class="line">            HashMapEntry[] t = table;</span><br><span class="line">            <span class="keyword">while</span> (index &lt; t.length &amp;&amp; (next = t[index++]) == <span class="keyword">null</span>)</span><br><span class="line">                ;</span><br><span class="line">        &#125;</span><br><span class="line">        current = e;</span><br><span class="line">        <span class="keyword">return</span> e;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">remove</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (current == <span class="keyword">null</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();</span><br><span class="line">        <span class="keyword">if</span> (modCount != expectedModCount)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ConcurrentModificationException();</span><br><span class="line">        Object k = current.key;</span><br><span class="line">        current = <span class="keyword">null</span>;</span><br><span class="line">        HashMap.<span class="keyword">this</span>.removeEntryForKey(k);</span><br><span class="line">        expectedModCount = modCount;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ol>
+<li>HashMap插入数据不同步，所以是线程不安全的</li>
+<li>内部使用链表 + 数组的形式保存所有的数据</li>
+<li>每次扩容都是当前容量的2倍</li></ol>
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <br>
+        <div>
+    
+        <div style="text-align:center;color:#ccc;font-size:14px">-------------THE END-------------</div>
+    
+</div>
+      </div>
+    
+
+    <div>
+      
+        <br>
+        
+<style>.my_post_copyright{padding:1px 0 1px 20px!important;margin-left:5px;border-left:3px solid #ed3726}.my_post_copyright p{line-height:1.5;margin:10px 0}.my_post_copyright p span{font-weight:700;padding-right:15px}</style>
+<div class="my_post_copyright">
+  <p><span>本文标题:</span><a href="/HashMap源码分析20180417/">HashMap源码分析</a></p>
+  <p><span>文章作者:</span><a href="/" title="访问 Lebens 的个人博客">Lebens</a></p>
+  <p><span>发布时间:</span>2018年04月17日 - 16:04</p>
+  <p><span>最后更新:</span>2018年04月19日 - 09:04</p>
+  <p><span>原始链接:</span><a href="/HashMap源码分析20180417/" title="HashMap源码分析">http://lebens.top/HashMap源码分析20180417/</a>
+    <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://lebens.top/HashMap源码分析20180417/" aria-label="复制成功！"></i></span>
+  </p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
+</div>
+<script>var clipboard=new Clipboard(".fa-clipboard");clipboard.on("success",$(function(){$(".fa-clipboard").click(function(){swal({title:"",text:"复制成功",html:!1,timer:500,showConfirmButton:!1})})}))</script>
+
+      
+    </div>
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/java集合/" rel="tag"># java集合</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/LinkedList源码分析20180410/" rel="next" title="LinkedList源码分析">
+                <i class="fa fa-chevron-left"></i> LinkedList源码分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars1.githubusercontent.com/u/10048597?v=4" alt="Lebens">
+            
+              <p class="site-author-name" itemprop="name">Lebens</p>
+              <p class="site-description motion-element" itemprop="description">我相信，梦里能到达的地方，总有一天，脚步也能到达</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/shuangpinai" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.csdn.net/zzhouqianq" title="易凌风" target="_blank">易凌风</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://cdevlab.top/" title="chendong" target="_blank">chendong</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#成员变量说明"><span class="nav-number">1.</span> <span class="nav-text">成员变量说明</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#成员变量table"><span class="nav-number">1.1.</span> <span class="nav-text">成员变量table</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#构造函数"><span class="nav-number">2.</span> <span class="nav-text">构造函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数据put操作"><span class="nav-number">3.</span> <span class="nav-text">数据put操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#table初始化"><span class="nav-number">3.1.</span> <span class="nav-text">table初始化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#value存储"><span class="nav-number">3.2.</span> <span class="nav-text">value存储</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#遍历"><span class="nav-number">4.</span> <span class="nav-text">遍历</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+  <i class="fa fa-star"></i>
+</span>
+  <span class="author" itemprop="copyrightHolder">Lebens</span>
+</div>
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">function proceedsearch(){$("body").append('<div class="search-popup-overlay local-search-pop-overlay"></div>').css("overflow","hidden"),$(".search-popup-overlay").click(onPopupClose),$(".popup").toggle();var t=$("#local-search-input");t.attr("autocapitalize","none"),t.attr("autocorrect","off"),t.focus()}var isfetched=!1,isXml=!0,search_path="search.xml";0===search_path.length?search_path="search.xml":/json$/i.test(search_path)&&(isXml=!1);var path="/"+search_path,onPopupClose=function(t){$(".popup").hide(),$("#local-search-input").val(""),$(".search-result-list").remove(),$("#no-result").remove(),$(".local-search-pop-overlay").remove(),$("body").css("overflow","")},searchFunc=function(t,e,o){"use strict";$("body").append('<div class="search-popup-overlay local-search-pop-overlay"><div id="search-loading-icon"><i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i></div></div>').css("overflow","hidden"),$("#search-loading-icon").css("margin","20% auto 0 auto").css("text-align","center"),$.ajax({url:t,dataType:isXml?"xml":"json",async:!0,success:function(t){isfetched=!0,$(".popup").detach().appendTo(".header-inner");var n=isXml?$("entry",t).map(function(){return{title:$("title",this).text(),content:$("content",this).text(),url:$("url",this).text()}}).get():t,r=document.getElementById(e),s=document.getElementById(o),a=function(){var t=r.value.trim().toLowerCase(),e=t.split(/[\s\-]+/);e.length>1&&e.push(t);var o=[];if(t.length>0&&n.forEach(function(n){var r=!1,s=0,a=0,i=n.title.trim(),c=i.toLowerCase(),l=n.content.trim().replace(/<[^>]+>/g,""),h=l.toLowerCase(),p=decodeURIComponent(n.url),u=[],f=[];if(""!=i&&(e.forEach(function(t){function e(t,e,o){var n=t.length;if(0===n)return[];var r=0,s=[],a=[];for(o||(e=e.toLowerCase(),t=t.toLowerCase());(s=e.indexOf(t,r))>-1;)a.push({position:s,word:t}),r=s+n;return a}u=u.concat(e(t,c,!1)),f=f.concat(e(t,h,!1))}),(u.length>0||f.length>0)&&(r=!0,s=u.length+f.length)),r){[u,f].forEach(function(t){t.sort(function(t,e){return e.position!==t.position?e.position-t.position:t.word.length-e.word.length})});function d(e,o,n,r){for(var s=r[r.length-1],i=s.position,c=s.word,l=[],h=0;i+c.length<=n&&0!=r.length;){c===t&&h++,l.push({position:i,length:c.length});var p=i+c.length;for(r.pop();0!=r.length&&(s=r[r.length-1],i=s.position,c=s.word,p>i);)r.pop()}return a+=h,{hits:l,start:o,end:n,searchTextCount:h}}var g=[];0!=u.length&&g.push(d(0,0,i.length,u));for(var v=[];0!=f.length;){var $=f[f.length-1],C=$.position,m=$.word,x=C-20,w=C+80;x<0&&(x=0),w<C+m.length&&(w=C+m.length),w>l.length&&(w=l.length),v.push(d(0,x,w,f))}v.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hits.length!==e.hits.length?e.hits.length-t.hits.length:t.start-e.start});var y=parseInt("1");y>=0&&(v=v.slice(0,y));function T(t,e){var o="",n=e.start;return e.hits.forEach(function(e){o+=t.substring(n,e.position);var r=e.position+e.length;o+='<b class="search-keyword">'+t.substring(e.position,r)+"</b>",n=r}),o+=t.substring(n,e.end)}var b="";0!=g.length?b+="<li><a href='"+p+"' class='search-result-title'>"+T(i,g[0])+"</a>":b+="<li><a href='"+p+"' class='search-result-title'>"+i+"</a>",v.forEach(function(t){b+="<a href='"+p+'\'><p class="search-result">'+T(l,t)+"...</p></a>"}),b+="</li>",o.push({item:b,searchTextCount:a,hitCount:s,id:o.length})}}),1===e.length&&""===e[0])s.innerHTML='<div id="no-result"><i class="fa fa-search fa-5x" /></div>';else if(0===o.length)s.innerHTML='<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>';else{o.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hitCount!==e.hitCount?e.hitCount-t.hitCount:e.id-t.id});var a='<ul class="search-result-list">';o.forEach(function(t){a+=t.item}),a+="</ul>",s.innerHTML=a}};r.addEventListener("input",a),$(".local-search-pop-overlay").remove(),$("body").css("overflow",""),proceedsearch()}})};$(".popup-trigger").click(function(t){t.stopPropagation(),!1===isfetched?searchFunc(path,"local-search-input","local-search-result"):proceedsearch()}),$(".popup-btn-close").click(onPopupClose),$(".popup").click(function(t){t.stopPropagation()}),$(document).on("keyup",function(t){27===t.which&&$(".search-popup").is(":visible")&&onPopupClose()})</script></div></body></header></html>
