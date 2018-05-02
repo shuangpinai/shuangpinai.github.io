@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[Java多线程系列]]></title>
+    <url>%2FJava%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%B3%BB%E5%88%9720180502%2F</url>
+    <content type="text"><![CDATA[多线程在编程过程中一个无法躲避的问题，涉及到的知识点也比较广泛，接下来会写一个系列解释多线程编程中需要了解一些知识点，本人才学浅薄只能讲解一下个人了解的内容，如有不全面之处大家可以在提出异议。主要会从如下几个方面入手：Java锁机制（Synchronized、Lock、volatile）线程中断机制（interrupt()、interrupted()、isInterrupted()）同步工具类（CountDownLatch、CyclicBarrier、Semaphore、thread.join()）线程池（Executor）以及多种常用线程池的介绍Callable、Future、FutureTask的介绍多线程实例之生产者/消费者模型]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>Java多线程</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[Mac优化之右键菜单优化]]></title>
     <url>%2FMac%E4%BC%98%E5%8C%96%E4%B9%8B%E5%8F%B3%E9%94%AE%E3%80%81Finder%E6%98%BE%E7%A4%BA%E4%BC%98%E5%8C%9620180427%2F</url>
     <content type="text"><![CDATA[今天这篇文章主要为了解决Mac下右键不能新建文件的痛处，顺带添加文件复制剪切等功能主要用到两个软件：NewFileMenu以及TotalFinderNewFileMenuMac下右键不能新建文件一直饱受诟病，确实也没有Win下那般方便NewFileMenu可以解决这个痛处，让Mac右键菜单才能也能有新建文件的选项，当然也不单单是新建文件这么一个选项，多种格式可选。软件可以在Mac下App Store搜索到，也可以点这里跳转来看一下作者的介绍：可以在桌面以及文件夹上新建各种格式的文件，包括.txt .doc等格式的文件右键上显示的子菜单个数可以在设置中自定义，设置如下除了模版上给出的格式，同时也支持自定义新建文件的格式，具体操作如下：进入设置页面后，选择模版（Templates）点击下方的+按钮，选择你要文件格式（这里需要有一个之前新建过的，最好是空白的目标文件）添加成功后双击新建的条目可以修改Title、Prefix、Suffix等信息因为markdown格式用的比较多，所以自己添加markdown格式，有需求的同学可以自己尝试。TotalFinder相对于NewFileMenu，TotalFinder安装比较麻烦，个人主要为了如下几个个需求而安装：多个Finder后可以像Chrome的Tap一样在同一个窗口中展示。右键菜单可以直接copy file path。右键菜单显示复制、剪切文件。先上效果图：软件下载地址在这里安装过程需要重启电脑4次双击安装TotalFinder重启电脑，期间同时按住command+r进入系统恢复页面在终端输入1csrutil disable 关闭系统完整系保护 正常重启电脑，继续安装TotalFinder 安装完成后再次重启电脑，期间同时按住command+r进入系统恢复页面 在终端输入 1csrutil enable 恢复系统完整系保护 安装完成，开机即可 好了，本次Mac右键优化就到这里结束， 有兴趣的同学可以自行尝试。]]></content>
