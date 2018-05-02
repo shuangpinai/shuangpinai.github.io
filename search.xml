@@ -5,7 +5,7 @@
     <url>%2FJava%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%B3%BB%E5%88%9720180502%2F</url>
     <content type="text"><![CDATA[多线程在编程过程中一个无法躲避的问题，涉及到的知识点也比较广泛，接下来会写一个系列解释多线程编程中需要了解一些知识点，本人才学浅薄只能讲解一下个人了解的内容，如有不全面之处大家可以在提出异议。主要会从如下几个方面入手：Java锁机制（Synchronized、Lock、volatile）线程中断机制（interrupt()、interrupted()、isInterrupted()）同步工具类（CountDownLatch、CyclicBarrier、Semaphore、thread.join()）线程池（Executor）以及多种常用线程池的介绍Callable、Future、FutureTask的介绍多线程实例之生产者/消费者模型]]></content>
       <categories>
-        <category>Java</category>
+        <category>java</category>
       </categories>
       <tags>
         <tag>Java多线程</tag>
