@@ -1,0 +1,446 @@
+<!DOCTYPE html><html class="theme-next mist use-motion" lang="zh-CN"><header id="header" class="header" itemscope itemtype="//schema.org/WPHeader"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="theme-color" content="#222"><script></script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"><link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css"><link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3"><link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222"><meta name="keywords" content="Java多线程,"><meta name="description" content="本文主要是为了介绍多线程中使用的几种任务：Runnable、Callable、FutureTask等，是对前面多线程系列的最后一个补充了，接下来两篇就是相当于实战练习了。"><meta name="keywords" content="Java多线程"><meta property="og:type" content="article"><meta property="og:title" content="Java中Runnable、Callable、Future的介绍"><meta property="og:url" content="http://lebens.top/Java中Callable、Future、FutureTask的介绍20180510/index.html"><meta property="og:site_name" content="Lebens"><meta property="og:description" content="本文主要是为了介绍多线程中使用的几种任务：Runnable、Callable、FutureTask等，是对前面多线程系列的最后一个补充了，接下来两篇就是相当于实战练习了。"><meta property="og:locale" content="zh-CN"><meta property="og:updated_time" content="2018-05-12T02:22:17.310Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Java中Runnable、Callable、Future的介绍"><meta name="twitter:description" content="本文主要是为了介绍多线程中使用的几种任务：Runnable、Callable、FutureTask等，是对前面多线程系列的最后一个补充了，接下来两篇就是相当于实战练习了。"><script type="text/javascript" id="hexo.configurations">var NexT=window.NexT||{},CONFIG={root:"/",scheme:"Mist",version:"5.1.3",sidebar:{position:"left",display:"post",offset:12,b2t:!1,scrollpercent:!1,onmobile:!1},fancybox:!0,tabs:!0,motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"slideDownIn",post_body:"slideDownIn",coll_header:"slideLeftIn",sidebar:"slideUpIn"}},duoshuo:{userId:"0",author:"博主"},algolia:{applicationID:"",apiKey:"",indexName:"",hits:{per_page:10},labels:{input_placeholder:"Search for Posts",hits_empty:"We didn't find any results for the search: ${query}",hits_stats:"${hits} results found in ${time} ms"}}}</script><link rel="canonical" href="http://lebens.top/Java中Callable、Future、FutureTask的介绍20180510/"><title>Java中Runnable、Callable、Future的介绍 | Lebens</title><style>.forkme{display:none}@media (min-width:768px){.forkme{display:inline}}</style></head><body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN"><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="forkme"><a target="_blank" href="https://github.com/shuangpinai"><img style="position:absolute;top:0;left:0;border:0" src="https://camo.githubusercontent.com/567c3a48d796e2fc06ea80409cc9dd82bf714434/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"></a></div><header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-wrapper"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Lebens</span> <span class="logo-line-after"><i></i></span></a></div><p class="site-subtitle"></p></div><div class="site-nav-toggle"><button><span class="btn-bar"></span> <span class="btn-bar"></span> <span class="btn-bar"></span></button></div></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br>主页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i><br>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br>日志</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于我</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class="site-search"><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class="search-icon"><i class="fa fa-search"></i> </span><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span><div class="local-search-input-wrapper"><input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input"></div></div><div id="local-search-result"></div></div></div></nav><script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script><link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet"><style>.pace .pace-progress{background:#00d9cf;height:2px}.pace .pace-progress-inner{box-shadow:0 0 10px #1e92fb,0 0 5px #1e92fb}.pace .pace-activity{border-top-color:#1e92fb;border-left-color:#1e92fb}</style></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><div id="posts" class="posts-expand"><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><div class="post-block"><link itemprop="mainEntityOfPage" href="http://lebens.top/Java中Callable、Future、FutureTask的介绍20180510/"><span hidden itemprop="author" itemscope itemtype="http://schema.org/Person"><meta itemprop="name" content="Lebens"><meta itemprop="description" content=""><meta itemprop="image" content="https://avatars1.githubusercontent.com/u/10048597?v=4"></span><span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization"><meta itemprop="name" content="Lebens"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">Java中Runnable、Callable、Future的介绍</h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i> </span><span class="post-meta-item-text">发表于</span> <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-10T17:39:32+08:00">2018-05-10 </time></span><span class="post-category"><span class="post-meta-divider">|</span> <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i> </span><span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a></span></span></div></header><div class="post-body" itemprop="articleBody"><p>本文主要是为了介绍多线程中使用的几种任务：Runnable、Callable、FutureTask等，是对前面多线程系列的最后一个补充了，接下来两篇就是相当于实战练习了。</p><a id="more"></a><h3 id="Runnable-和-Callable的区别"><a href="#Runnable-和-Callable的区别" class="headerlink" title="Runnable 和 Callable的区别"></a>Runnable 和 Callable的区别</h3><p>Runnable和Callable都是定义了接口，可以用在线程池中异步执行，区别是：</p><ul><li>Runnable可以直接被Thread执行，但是没有返回值</li><li>Callable执行之后有返回值，但是只能提交给线程池执行。</li></ul><h3 id="Future-和-FutureTask"><a href="#Future-和-FutureTask" class="headerlink" title="Future 和 FutureTask"></a>Future 和 FutureTask</h3><p>Future是一个接口，主要是线程池中任务执行之后用于返回结果的获取，定义了</p><ul><li>boolean cancel(boolean mayInterruptIfRunning); 取消任务</li><li>boolean isCancelled(); 任务是否取消</li><li>boolean isDone(); 任务是否执行完毕</li><li>V get(); 获取任务执行的结果，注意这个方法阻塞线程</li><li>V get(long timeout, TimeUnit unit)； 同上，只是增加了一个超时时间</li></ul><p>Future有一个直接继承接口RunnableFuture，RunnableFuture有一个实现的子类FutureTask，RunnableFuture这个接口同时还继承了Runnable接口，这意味着FutureTask可以作为Future或者Runnable使用。</p><p>再来看一下FutureTask的实现，最终内部保存了一个Callable对象，也就是提交的任务</p><p>先看构造函数</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">FutureTask</span><span class="params">(Callable&lt;V&gt; callable)</span> </span>&#123;                    </span><br><span class="line">    <span class="keyword">if</span> (callable == <span class="keyword">null</span>)                                    </span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();                    </span><br><span class="line">    <span class="keyword">this</span>.callable = callable;                                </span><br><span class="line">    <span class="keyword">this</span>.state = NEW;       <span class="comment">// ensure visibility of callable </span></span><br><span class="line">&#125;                                                            </span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="comment">/**                                                                    </span></span><br><span class="line"><span class="comment"> * Creates a &#123;<span class="doctag">@code</span> FutureTask&#125; that will, upon running, execute the   </span></span><br><span class="line"><span class="comment"> * given &#123;<span class="doctag">@code</span> Runnable&#125;, and arrange that &#123;<span class="doctag">@code</span> get&#125; will return the</span></span><br><span class="line"><span class="comment"> * given result on successful completion.                              </span></span><br><span class="line"><span class="comment"> *                                                                     </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> runnable the runnable task                                   </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> result the result to return on successful completion. If     </span></span><br><span class="line"><span class="comment"> * you don't need a particular result, consider using                  </span></span><br><span class="line"><span class="comment"> * constructions of the form:                                          </span></span><br><span class="line"><span class="comment"> * &#123;<span class="doctag">@code</span> Future&lt;?&gt; f = new FutureTask&lt;Void&gt;(runnable, null)&#125;          </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@throws</span> NullPointerException if the runnable is null                </span></span><br><span class="line"><span class="comment"> */</span>                                                                    </span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">FutureTask</span><span class="params">(Runnable runnable, V result)</span> </span>&#123;                       </span><br><span class="line">    <span class="keyword">this</span>.callable = Executors.callable(runnable, result);              </span><br><span class="line">    <span class="keyword">this</span>.state = NEW;       <span class="comment">// ensure visibility of callable           </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一共2个构造函数，一个是接受Callable，一个是接受Runnable和默认返回值。</p>
+<p>详细看一下第二个构造参数，注释很清楚的说明，当你需要runnable可取消同时不关心返回值时，可以这样构建 </p>
+<pre><code>Future&lt;?&gt; f = new FutureTask&lt;Void&gt;(runnable, null)；
+</code></pre><p>同时构造函数里，Runnable被适配成了一个Callable，看一下里面的实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**                                                                </span></span><br><span class="line"><span class="comment"> * Returns a &#123;<span class="doctag">@link</span> Callable&#125; object that, when                    </span></span><br><span class="line"><span class="comment"> * called, runs the given task and returns the given result.  This </span></span><br><span class="line"><span class="comment"> * can be useful when applying methods requiring a                 </span></span><br><span class="line"><span class="comment"> * &#123;<span class="doctag">@code</span> Callable&#125; to an otherwise resultless action.             </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> task the task to run                                     </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> result the result to return                              </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> &lt;T&gt; the type of the result                               </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> a callable object                                       </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@throws</span> NullPointerException if task null                       </span></span><br><span class="line"><span class="comment"> */</span>                                                                </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Callable&lt;T&gt; <span class="title">callable</span><span class="params">(Runnable task, T result)</span> </span>&#123;  </span><br><span class="line">    <span class="keyword">if</span> (task == <span class="keyword">null</span>)                                              </span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();                          </span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> RunnableAdapter&lt;T&gt;(task, result);                   </span><br><span class="line">&#125;     </span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line"><span class="comment">/**                                                            </span></span><br><span class="line"><span class="comment"> * A callable that runs given task and returns given result    </span></span><br><span class="line"><span class="comment"> */</span>                                                            </span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">RunnableAdapter</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">Callable</span>&lt;<span class="title">T</span>&gt; </span>&#123; </span><br><span class="line">    <span class="keyword">final</span> Runnable task;                                       </span><br><span class="line">    <span class="keyword">final</span> T result;                                            </span><br><span class="line">    RunnableAdapter(Runnable task, T result) &#123;                 </span><br><span class="line">        <span class="keyword">this</span>.task = task;                                      </span><br><span class="line">        <span class="keyword">this</span>.result = result;                                  </span><br><span class="line">    &#125;                                                          </span><br><span class="line">    <span class="function"><span class="keyword">public</span> T <span class="title">call</span><span class="params">()</span> </span>&#123;                                          </span><br><span class="line">        task.run();                                            </span><br><span class="line">        <span class="keyword">return</span> result;                                         </span><br><span class="line">    &#125;                                                          </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面两个函数将一个Runnable适配成了一个Callable，是Executors中提供的静态方法。</p>
+<p>再看一下FutureTask对Runnable的实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;                                                    </span><br><span class="line">    <span class="keyword">if</span> (state != NEW ||                                                </span><br><span class="line">        !UNSAFE.compareAndSwapObject(<span class="keyword">this</span>, runnerOffset,               </span><br><span class="line">                                     <span class="keyword">null</span>, Thread.currentThread()))    </span><br><span class="line">        <span class="keyword">return</span>;                                                        </span><br><span class="line">    <span class="keyword">try</span> &#123;                                                              </span><br><span class="line">        Callable&lt;V&gt; c = callable;                                      </span><br><span class="line">        <span class="keyword">if</span> (c != <span class="keyword">null</span> &amp;&amp; state == NEW) &#123;                               </span><br><span class="line">            V result;                                                  </span><br><span class="line">            <span class="keyword">boolean</span> ran;                                               </span><br><span class="line">            <span class="keyword">try</span> &#123;                                                      </span><br><span class="line">                result = c.call();                                     </span><br><span class="line">                ran = <span class="keyword">true</span>;                                            </span><br><span class="line">            &#125; <span class="keyword">catch</span> (Throwable ex) &#123;                                   </span><br><span class="line">                result = <span class="keyword">null</span>;                                         </span><br><span class="line">                ran = <span class="keyword">false</span>;                                           </span><br><span class="line">                setException(ex);                                      </span><br><span class="line">            &#125;                                                          </span><br><span class="line">            <span class="keyword">if</span> (ran)                                                   </span><br><span class="line">                set(result);                                           </span><br><span class="line">        &#125;                                                              </span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;                                                        </span><br><span class="line">        <span class="comment">// runner must be non-null until state is settled to           </span></span><br><span class="line">        <span class="comment">// prevent concurrent calls to run()                           </span></span><br><span class="line">        runner = <span class="keyword">null</span>;                                                 </span><br><span class="line">        <span class="comment">// state must be re-read after nulling runner to prevent       </span></span><br><span class="line">        <span class="comment">// leaked interrupts                                           </span></span><br><span class="line">        <span class="keyword">int</span> s = state;                                                 </span><br><span class="line">        <span class="keyword">if</span> (s &gt;= INTERRUPTING)                                         </span><br><span class="line">            handlePossibleCancellationInterrupt(s);                    </span><br><span class="line">    &#125;                                                                  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>抛开其他的判断条件，其实就是对内部保存的Callable调用了call方法，进行执行并保存结果。这就是FutureTask主要的几个方法，下面有用。</p>
+<h3 id="ExecutorService中Future的应用"><a href="#ExecutorService中Future的应用" class="headerlink" title="ExecutorService中Future的应用"></a>ExecutorService中Future的应用</h3><p>上面2点主要是为了给这点做伏笔，现在我们来看为什么ExecutorService中的submit()既可以提交Runnable又可以提交Callable并返回结果，同时看看直接execute() Runnable会有什么不同。</p>
+<h4 id="Future-submit-Runnable-task"><a href="#Future-submit-Runnable-task" class="headerlink" title="Future submit(Runnable task)"></a>Future submit(Runnable task)</h4><p>先来看一下这个方法的实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> Future&lt;?&gt; submit(Runnable task) &#123;                       </span><br><span class="line">    <span class="keyword">if</span> (task == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();        </span><br><span class="line">    RunnableFuture&lt;Void&gt; ftask = newTaskFor(task, <span class="keyword">null</span>);       </span><br><span class="line">    execute(ftask);                                            </span><br><span class="line">    <span class="keyword">return</span> ftask;                                              </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>代码上可以很直观的看到，提交的Runnable被newTaskFor()适配成了RunnableFuture。来看一下newTaskFor()这个方法的实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> &lt;T&gt; <span class="function">RunnableFuture&lt;T&gt; <span class="title">newTaskFor</span><span class="params">(Runnable runnable, T value)</span> </span>&#123; </span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> FutureTask&lt;T&gt;(runnable, value);                           </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>直接是new了一个FutureTask对象，上面我们分析过这种情况，runnable其实是会被适配成一个Callable的。</p>
+<h4 id="Future-submit-Callable-task"><a href="#Future-submit-Callable-task" class="headerlink" title="Future submit(Callable task)"></a>Future<t> submit(Callable<t> task)</t></t></h4><p>再来看一下这个方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">Future&lt;T&gt; <span class="title">submit</span><span class="params">(Callable&lt;T&gt; task)</span> </span>&#123;         </span><br><span class="line">    <span class="keyword">if</span> (task == <span class="keyword">null</span>) <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException(); </span><br><span class="line">    RunnableFuture&lt;T&gt; ftask = newTaskFor(task);         </span><br><span class="line">    execute(ftask);                                     </span><br><span class="line">    <span class="keyword">return</span> ftask;                                       </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>跟上面的代码简直一摸一样，都是适配成了RunnableFuture。</p>
+<p>看到这里可以明白，提交Runnable时是将Runnable适配成了Callable，也就是submit方法最终都会调用的的是Callable对象。</p>
+<p>上面我们说过RunnableFuture实现了Runnable接口，当他被execute时，肯定是被当作Runnable使用的，看一下两个submit方法最终都是通过execute来执行的。</p>
+<p>上面介绍FutureTask时我们知道，对Runnable的实现FutureTask最后调用的是Callable的call方法。</p>
+<p>到这里可以知道了，</p>
+<ol>
+<li>当我们提交一个Runnable的任务时，首先通过FutureTask的构造函数被适配成了一个Callable对象被保存FutureTask中。</li>
+<li>当任务被执行时，FutureTask又被当作一个Runnable使用，调用了保存在内部的Callable的call方法，任务被执行并返回了结果。</li>
+<li>Runnable被适配成Callable时最终调用的还是自己的run方法。</li>
+</ol>
+<h3 id="ExecutorService中execute"><a href="#ExecutorService中execute" class="headerlink" title="ExecutorService中execute()"></a>ExecutorService中execute()</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span> </span>&#123;                             </span><br><span class="line">    <span class="keyword">if</span> (command == <span class="keyword">null</span>)                                            </span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();                           </span><br><span class="line">    <span class="comment">/*                                                              </span></span><br><span class="line"><span class="comment">     * Proceed in 3 steps:                                          </span></span><br><span class="line"><span class="comment">     *                                                              </span></span><br><span class="line"><span class="comment">     * 1. If fewer than corePoolSize threads are running, try to    </span></span><br><span class="line"><span class="comment">     * start a new thread with the given command as its first       </span></span><br><span class="line"><span class="comment">     * task.  The call to addWorker atomically checks runState and  </span></span><br><span class="line"><span class="comment">     * workerCount, and so prevents false alarms that would add     </span></span><br><span class="line"><span class="comment">     * threads when it shouldn't, by returning false.               </span></span><br><span class="line"><span class="comment">     *                                                              </span></span><br><span class="line"><span class="comment">     * 2. If a task can be successfully queued, then we still need  </span></span><br><span class="line"><span class="comment">     * to double-check whether we should have added a thread        </span></span><br><span class="line"><span class="comment">     * (because existing ones died since last checking) or that     </span></span><br><span class="line"><span class="comment">     * the pool shut down since entry into this method. So we       </span></span><br><span class="line"><span class="comment">     * recheck state and if necessary roll back the enqueuing if    </span></span><br><span class="line"><span class="comment">     * stopped, or start a new thread if there are none.            </span></span><br><span class="line"><span class="comment">     *                                                              </span></span><br><span class="line"><span class="comment">     * 3. If we cannot queue task, then we try to add a new         </span></span><br><span class="line"><span class="comment">     * thread.  If it fails, we know we are shut down or saturated  </span></span><br><span class="line"><span class="comment">     * and so reject the task.                                      </span></span><br><span class="line"><span class="comment">     */</span>                                                             </span><br><span class="line">    <span class="keyword">int</span> c = ctl.get();                                              </span><br><span class="line">    <span class="keyword">if</span> (workerCountOf(c) &lt; corePoolSize) &#123;                          </span><br><span class="line">        <span class="keyword">if</span> (addWorker(command, <span class="keyword">true</span>))                               </span><br><span class="line">            <span class="keyword">return</span>;                                                 </span><br><span class="line">        c = ctl.get();                                              </span><br><span class="line">    &#125;                                                               </span><br><span class="line">    <span class="keyword">if</span> (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;                 </span><br><span class="line">        <span class="keyword">int</span> recheck = ctl.get();                                    </span><br><span class="line">        <span class="keyword">if</span> (! isRunning(recheck) &amp;&amp; remove(command))                </span><br><span class="line">            reject(command);                                        </span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (workerCountOf(recheck) == <span class="number">0</span>)                       </span><br><span class="line">            addWorker(<span class="keyword">null</span>, <span class="keyword">false</span>);                                 </span><br><span class="line">    &#125;                                                               </span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (!addWorker(command, <span class="keyword">false</span>))                            </span><br><span class="line">        reject(command);                                            </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面注释的意思是：</p>
+<ol>
+<li>当前核心线程数少于corePoolSize是，尝试直接新建Thread用来执行任务。同时校验添加的过程，防止出错。</li>
+<li>任务入队时二次校验是否需要新建线程，判断是否需要回滚等。</li>
+<li>如果任务不能入队则新建非核心线程处理，如果失败那么就拒绝任务。</li>
+</ol>
+<p>这个就是任务具体执行的过程，同时也可以知道为什么上一篇博客中通过反射获取workers的size就能知道当前线程的数量。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>又到总结时间，博文主要讲了几个概念Runnable、Callable、Future以及相关的子类，总结如下：</p>
+<ul>
+<li>Runnable可以直接被Thread执行，但是没有返回值</li>
+<li>Callable执行之后有返回值，但是只能提交给线程池执行。</li>
+<li>Future定义了一系列关于任务取消的接口方法</li>
+<li>FutureTask是Future唯一实现类，它也实现了Runnable接口</li>
+<li>线程池submit Callable和Runnable时最终都会转换成FutureTask</li>
+<li>FutureTask被执行时是被当成Runnable使用的，执行了内部保存的Callable的call方法</li></ul>
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <br>
+        <div>
+    
+        <div style="text-align:center;color:#ccc;font-size:14px">-------------THE END-------------</div>
+    
+</div>
+      </div>
+    
+
+    <div>
+      
+        <br>
+        
+<style>.my_post_copyright{padding:1px 0 1px 20px!important;margin-left:5px;border-left:3px solid #ed3726}.my_post_copyright p{line-height:1.5;margin:10px 0}.my_post_copyright p span{font-weight:700;padding-right:15px}</style>
+<div class="my_post_copyright">
+  <p><span>本文标题:</span><a href="/Java中Callable、Future、FutureTask的介绍20180510/">Java中Runnable、Callable、Future的介绍</a></p>
+  <p><span>文章作者:</span><a href="/" title="访问 Lebens 的个人博客">Lebens</a></p>
+  <p><span>发布时间:</span>2018年05月10日 - 17:05</p>
+  <p><span>最后更新:</span>2018年05月12日 - 10:05</p>
+  <p><span>原始链接:</span><a href="/Java中Callable、Future、FutureTask的介绍20180510/" title="Java中Runnable、Callable、Future的介绍">http://lebens.top/Java中Callable、Future、FutureTask的介绍20180510/</a>
+    <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://lebens.top/Java中Callable、Future、FutureTask的介绍20180510/" aria-label="复制成功！"></i></span>
+  </p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
+</div>
+<script>var clipboard=new Clipboard(".fa-clipboard");clipboard.on("success",$(function(){$(".fa-clipboard").click(function(){swal({title:"",text:"复制成功",html:!1,timer:500,showConfirmButton:!1})})}))</script>
+
+      
+    </div>
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Java多线程/" rel="tag"># Java多线程</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/Mac美化之动态锁屏、动态背景20180509/" rel="next" title="Mac美化之动态屏保、动态背景">
+                <i class="fa fa-chevron-left"></i> Mac美化之动态屏保、动态背景
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars1.githubusercontent.com/u/10048597?v=4" alt="Lebens">
+            
+              <p class="site-author-name" itemprop="name">Lebens</p>
+              <p class="site-description motion-element" itemprop="description">我相信，梦里能到达的地方，总有一天，脚步也能到达</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">26</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/shuangpinai" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.csdn.net/zzhouqianq" title="易凌风" target="_blank">易凌风</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://cdevlab.top/" title="chendong" target="_blank">chendong</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Runnable-和-Callable的区别"><span class="nav-number">1.</span> <span class="nav-text">Runnable 和 Callable的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Future-和-FutureTask"><span class="nav-number">2.</span> <span class="nav-text">Future 和 FutureTask</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ExecutorService中Future的应用"><span class="nav-number">3.</span> <span class="nav-text">ExecutorService中Future的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Future-submit-Runnable-task"><span class="nav-number">3.1.</span> <span class="nav-text">Future submit(Runnable task)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Future-submit-Callable-task"><span class="nav-number">3.2.</span> <span class="nav-text">Future submit(Callable task)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ExecutorService中execute"><span class="nav-number">4.</span> <span class="nav-text">ExecutorService中execute()</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+  <i class="fa fa-star"></i>
+</span>
+  <span class="author" itemprop="copyrightHolder">Lebens</span>
+</div>
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">function proceedsearch(){$("body").append('<div class="search-popup-overlay local-search-pop-overlay"></div>').css("overflow","hidden"),$(".search-popup-overlay").click(onPopupClose),$(".popup").toggle();var t=$("#local-search-input");t.attr("autocapitalize","none"),t.attr("autocorrect","off"),t.focus()}var isfetched=!1,isXml=!0,search_path="search.xml";0===search_path.length?search_path="search.xml":/json$/i.test(search_path)&&(isXml=!1);var path="/"+search_path,onPopupClose=function(t){$(".popup").hide(),$("#local-search-input").val(""),$(".search-result-list").remove(),$("#no-result").remove(),$(".local-search-pop-overlay").remove(),$("body").css("overflow","")},searchFunc=function(t,e,o){"use strict";$("body").append('<div class="search-popup-overlay local-search-pop-overlay"><div id="search-loading-icon"><i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i></div></div>').css("overflow","hidden"),$("#search-loading-icon").css("margin","20% auto 0 auto").css("text-align","center"),$.ajax({url:t,dataType:isXml?"xml":"json",async:!0,success:function(t){isfetched=!0,$(".popup").detach().appendTo(".header-inner");var n=isXml?$("entry",t).map(function(){return{title:$("title",this).text(),content:$("content",this).text(),url:$("url",this).text()}}).get():t,r=document.getElementById(e),s=document.getElementById(o),a=function(){var t=r.value.trim().toLowerCase(),e=t.split(/[\s\-]+/);e.length>1&&e.push(t);var o=[];if(t.length>0&&n.forEach(function(n){var r=!1,s=0,a=0,i=n.title.trim(),c=i.toLowerCase(),l=n.content.trim().replace(/<[^>]+>/g,""),h=l.toLowerCase(),p=decodeURIComponent(n.url),u=[],f=[];if(""!=i&&(e.forEach(function(t){function e(t,e,o){var n=t.length;if(0===n)return[];var r=0,s=[],a=[];for(o||(e=e.toLowerCase(),t=t.toLowerCase());(s=e.indexOf(t,r))>-1;)a.push({position:s,word:t}),r=s+n;return a}u=u.concat(e(t,c,!1)),f=f.concat(e(t,h,!1))}),(u.length>0||f.length>0)&&(r=!0,s=u.length+f.length)),r){[u,f].forEach(function(t){t.sort(function(t,e){return e.position!==t.position?e.position-t.position:t.word.length-e.word.length})});function d(e,o,n,r){for(var s=r[r.length-1],i=s.position,c=s.word,l=[],h=0;i+c.length<=n&&0!=r.length;){c===t&&h++,l.push({position:i,length:c.length});var p=i+c.length;for(r.pop();0!=r.length&&(s=r[r.length-1],i=s.position,c=s.word,p>i);)r.pop()}return a+=h,{hits:l,start:o,end:n,searchTextCount:h}}var g=[];0!=u.length&&g.push(d(0,0,i.length,u));for(var v=[];0!=f.length;){var $=f[f.length-1],C=$.position,m=$.word,x=C-20,w=C+80;x<0&&(x=0),w<C+m.length&&(w=C+m.length),w>l.length&&(w=l.length),v.push(d(0,x,w,f))}v.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hits.length!==e.hits.length?e.hits.length-t.hits.length:t.start-e.start});var y=parseInt("1");y>=0&&(v=v.slice(0,y));function T(t,e){var o="",n=e.start;return e.hits.forEach(function(e){o+=t.substring(n,e.position);var r=e.position+e.length;o+='<b class="search-keyword">'+t.substring(e.position,r)+"</b>",n=r}),o+=t.substring(n,e.end)}var b="";0!=g.length?b+="<li><a href='"+p+"' class='search-result-title'>"+T(i,g[0])+"</a>":b+="<li><a href='"+p+"' class='search-result-title'>"+i+"</a>",v.forEach(function(t){b+="<a href='"+p+'\'><p class="search-result">'+T(l,t)+"...</p></a>"}),b+="</li>",o.push({item:b,searchTextCount:a,hitCount:s,id:o.length})}}),1===e.length&&""===e[0])s.innerHTML='<div id="no-result"><i class="fa fa-search fa-5x" /></div>';else if(0===o.length)s.innerHTML='<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>';else{o.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hitCount!==e.hitCount?e.hitCount-t.hitCount:e.id-t.id});var a='<ul class="search-result-list">';o.forEach(function(t){a+=t.item}),a+="</ul>",s.innerHTML=a}};r.addEventListener("input",a),$(".local-search-pop-overlay").remove(),$("body").css("overflow",""),proceedsearch()}})};$(".popup-trigger").click(function(t){t.stopPropagation(),!1===isfetched?searchFunc(path,"local-search-input","local-search-result"):proceedsearch()}),$(".popup-btn-close").click(onPopupClose),$(".popup").click(function(t){t.stopPropagation()}),$(document).on("keyup",function(t){27===t.which&&$(".search-popup").is(":visible")&&onPopupClose()})</script></div></body></header></html>
