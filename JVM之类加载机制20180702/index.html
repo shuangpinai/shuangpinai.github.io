@@ -1,0 +1,465 @@
+<!DOCTYPE html><html class="theme-next mist use-motion" lang="zh-CN"><header id="header" class="header" itemscope itemtype="//schema.org/WPHeader"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="theme-color" content="#222"><script></script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"><link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css"><link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3"><link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222"><meta name="keywords" content="JVM,"><meta name="description" content="一个Java类从被加载到虚拟机内存到被卸载出内存为止，生命周期一共包括如下几个阶段：加载（Loading）验证 (Verfication)准备 (Preparation)解析 (Resolution)初始化 (Initialization)使用 (Using)卸载 (Unloading)"><meta name="keywords" content="JVM"><meta property="og:type" content="article"><meta property="og:title" content="JVM之类加载机制"><meta property="og:url" content="http://lebens.top/JVM之类加载机制20180702/index.html"><meta property="og:site_name" content="Lebens"><meta property="og:description" content="一个Java类从被加载到虚拟机内存到被卸载出内存为止，生命周期一共包括如下几个阶段：加载（Loading）验证 (Verfication)准备 (Preparation)解析 (Resolution)初始化 (Initialization)使用 (Using)卸载 (Unloading)"><meta property="og:locale" content="zh-CN"><meta property="og:image" content="http://lebens.top/images/Java虚拟机/类的生命周期图.png"><meta property="og:image" content="http://lebens.top/images/Java虚拟机/类回收示意图.png"><meta property="og:updated_time" content="2018-07-07T01:08:00.654Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="JVM之类加载机制"><meta name="twitter:description" content="一个Java类从被加载到虚拟机内存到被卸载出内存为止，生命周期一共包括如下几个阶段：加载（Loading）验证 (Verfication)准备 (Preparation)解析 (Resolution)初始化 (Initialization)使用 (Using)卸载 (Unloading)"><meta name="twitter:image" content="http://lebens.top/images/Java虚拟机/类的生命周期图.png"><script type="text/javascript" id="hexo.configurations">var NexT=window.NexT||{},CONFIG={root:"/",scheme:"Mist",version:"5.1.3",sidebar:{position:"left",display:"post",offset:12,b2t:!1,scrollpercent:!1,onmobile:!1},fancybox:!0,tabs:!0,motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"slideDownIn",post_body:"slideDownIn",coll_header:"slideLeftIn",sidebar:"slideUpIn"}},duoshuo:{userId:"0",author:"博主"},algolia:{applicationID:"",apiKey:"",indexName:"",hits:{per_page:10},labels:{input_placeholder:"Search for Posts",hits_empty:"We didn't find any results for the search: ${query}",hits_stats:"${hits} results found in ${time} ms"}}}</script><link rel="canonical" href="http://lebens.top/JVM之类加载机制20180702/"><title>JVM之类加载机制 | Lebens</title><style>.forkme{display:none}@media (min-width:768px){.forkme{display:inline}}</style></head><body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN"><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="forkme"><a target="_blank" href="https://github.com/shuangpinai"><img style="position:absolute;top:0;left:0;border:0" src="https://camo.githubusercontent.com/567c3a48d796e2fc06ea80409cc9dd82bf714434/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"></a></div><header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-wrapper"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Lebens</span> <span class="logo-line-after"><i></i></span></a></div><p class="site-subtitle"></p></div><div class="site-nav-toggle"><button><span class="btn-bar"></span> <span class="btn-bar"></span> <span class="btn-bar"></span></button></div></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br>主页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i><br>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br>日志</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于我</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class="site-search"><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class="search-icon"><i class="fa fa-search"></i> </span><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span><div class="local-search-input-wrapper"><input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input"></div></div><div id="local-search-result"></div></div></div></nav><script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script><link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet"><style>.pace .pace-progress{background:#00d9cf;height:2px}.pace .pace-progress-inner{box-shadow:0 0 10px #1e92fb,0 0 5px #1e92fb}.pace .pace-activity{border-top-color:#1e92fb;border-left-color:#1e92fb}</style></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><div id="posts" class="posts-expand"><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><div class="post-block"><link itemprop="mainEntityOfPage" href="http://lebens.top/JVM之类加载机制20180702/"><span hidden itemprop="author" itemscope itemtype="http://schema.org/Person"><meta itemprop="name" content="Lebens"><meta itemprop="description" content=""><meta itemprop="image" content="https://avatars1.githubusercontent.com/u/10048597?v=4"></span><span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization"><meta itemprop="name" content="Lebens"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">JVM之类加载机制</h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i> </span><span class="post-meta-item-text">发表于</span> <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-02T14:17:50+08:00">2018-07-02 </time></span><span class="post-category"><span class="post-meta-divider">|</span> <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i> </span><span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/java/" itemprop="url" rel="index"><span itemprop="name">java</span></a></span></span></div></header><div class="post-body" itemprop="articleBody"><p>一个Java类从被加载到虚拟机内存到被卸载出内存为止，生命周期一共包括如下几个阶段：</p><ul><li><strong>加载</strong>（Loading）</li><li><strong>验证</strong> (Verfication)</li><li><strong>准备</strong> (Preparation)</li><li><strong>解析</strong> (Resolution)</li><li><strong>初始化</strong> (Initialization)</li><li><strong>使用</strong> (Using)</li><li><strong>卸载</strong> (Unloading)</li></ul><a id="more"></a><p>其中验证、准备、解析这个3个部分统称为链接（Linking）。</p><p><img src="../../images/Java虚拟机/类的生命周期图.png" alt="类的生命周期"></p><p>加载、验证、准备、初始化和卸载这5个阶段开始执行的顺序是一定的，但不意味着这几个阶段是分开执行的，这些阶段通常是相互交叉混合式进行的，通常会在一个阶段执行的过程中调用、激活另一个过程。</p><p>解析阶段则不一定，为了支持java的运行时绑定，在某些特定的情况下解析可以在初始化阶段之后开始。</p><h3 id="加载阶段"><a href="#加载阶段" class="headerlink" title="加载阶段"></a>加载阶段</h3><p>这个阶段主要完成如下3件事情</p><ul><li>通过一个类的全限定名来获取定义此类的二进制字节流</li><li>将这个字节流代表的静态存储结构转化成方法区的运行时数据结构</li><li>生成一个此类的Java.lang.Class对象（方法区中），作为方法区这个类的数据的访问入口。</li></ul><p>这里获取字节流的方式并不局限于zip，还包括诸如网络中获取、运行时生成、其他文件生成、数据库读取等方式。</p><p>同时相对于类加载过程的其他阶段，相对于一个<strong>非数组类</strong>的加载阶段是开发者可控性最强的，因为加载阶段既可以使用系统提供的加载器，也可以用户自定义类加载器来完成类的加载。</p><p>数组类的加载情况有所不同，虽然数组类是JVM直接创建的，但是数组的组件，最终还是要依靠类加载器去加载，一个数组类创建主要有如下几点：</p><ul><li>如果数组的组件类型为引用类型，数组将会在组件的类加载器上被标识。</li><li>如果组件类型不是引用类型，JVM会将数据将会与引导类加载器关联。</li><li>数组的可见性与它的组件类型保持一致，如果组件的类型不是引用类型，则数据可见性默认为public。</li></ul><p>加载阶段完成后，类的二进制字节流将按照JVM所需的格式存储在方法区中，同时在内存中实例化一个java.lang.Class的实例对象，<strong>作为程序访问方法区中这些类数据的外部接口</strong>。相对于HotSpot，这个实例对象比较特殊，<strong>虽然是一个对象，但并没有放置在堆中，而是放置在方法区中</strong>。</p><h3 id="验证阶段"><a href="#验证阶段" class="headerlink" title="验证阶段"></a>验证阶段</h3><p>这个阶段主要是确保加载的Class文件中的字节流包含的信息符合当前虚拟机的要求，同时不存在损害JVM的行为.</p><p>从整体上看，验证阶段大致上会完成下面4个阶段的检验动作：文件格式验证、元数据验证、字节码验证、符号引用验证</p><h5 id="文件格式验证"><a href="#文件格式验证" class="headerlink" title="文件格式验证"></a>文件格式验证</h5><p>这一阶段主要验证字节流是否符合Class文件格式的规范：</p><ul><li>验证开头的4字节的Magic Number 是否是0xCAFEBABE</li><li>检验当前的主、次版本号能否能被当前虚拟机处理</li><li>常量池中是否有不被支持的常量类型</li><li>指向常量的各种索引值是否有不存在或者不符合类型的常量</li><li>CONSTANT_Utf8_info型的常量中是否有不符合UTF8编码的数据</li><li>Class文件的各个部分以及文件本身是否被删除或者附带其他信息</li></ul><p>以及等等一些步骤，通过这个步骤的验证之后，字节流才会进入<strong>方法区</strong>中存储，后续的3个阶段的验证，都是基于方法区的存储结构进行的</p><h5 id="元数据验证"><a href="#元数据验证" class="headerlink" title="元数据验证"></a>元数据验证</h5><p>这一阶段主要是对字节码描述的信息进行语义分析：</p><ul><li>是否有父类（只有Object没有父类）</li><li>它的父类是否继承了不允许被继承的类（被final修饰的类）</li><li>非抽象类是否实现了父类要求实现的方法</li><li>成员变量、方法等是否与父类相矛盾（覆盖父类final字段，重载的方法是否符合要求）</li></ul><p>等等</p><h5 id="字节码验证"><a href="#字节码验证" class="headerlink" title="字节码验证"></a>字节码验证</h5><p>这一阶段将对类的方法体进行校验分析，保证类的方法在运行时不会做出危害虚拟机安全的事件。<strong>这个阶段是整个验证过程中最复杂的一个阶段</strong></p><ul><li>保证任意时刻操作数栈的数据类型都能和指令代码序列配合工作</li><li>保证跳转指令不会跳转到方法体之外的指令</li><li>保证方法体中的类型转换是有效的</li></ul><p>等等</p><p>没有通过字节码验证的方法体一定是有问题的，但是<strong>通过字节码验证的方法体也不能保证一定没问题</strong>。</p><h5 id="符号引用验证"><a href="#符号引用验证" class="headerlink" title="符号引用验证"></a>符号引用验证</h5><p>这个验证发生在JVM将符合引用转换成直接引用的时候，在链接的第三阶段—解析阶段发生</p><ul><li>符合引用通过字符串描述的全限定名能否找到对应的类</li><li>指定类中是否存在符合方法的字段描述以及简单名称所描素的方法和字段</li><li>符号引用的类、字段、方法是否能被当前类访问</li></ul><p>等等</p><p><strong>验证阶段对于JVM的类加载机制是非常重要的，但不是必要的，因为对程序运行期没有影响</strong></p><h3 id="准备阶段"><a href="#准备阶段" class="headerlink" title="准备阶段"></a>准备阶段</h3><p>这个阶段主要是为类变量（也就是被static修饰的）分配内存并赋值零值的阶段。所谓的零值就是默认的初始值，每种数据类型各有不同的零值。（需要注意的是同时被static final 修饰的变量在此时就赋值完毕，并不会存在赋零值的操作）</p><p>举个栗子：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> abc = <span class="number">123</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> ABC = <span class="number">123</span>;</span><br></pre></td></tr></table></figure>
+<p>上面两句的代码在准备阶段的区别是</p>
+<ul>
+<li>准备阶段过后，变量abc的初始值是0，而不是123。被static修饰的变量赋值操作，被JVM收集后存在于类构造器的<clinit>()中，这里还没执行到类的初始化阶段，所以并不会被赋值成123；</clinit></li>
+<li>同时被static final 修饰的变量ABC在编辑阶段javac就会为ABC生成ConstantValue属性，在准备JVM就会根据ConstantValue直接赋值，也就是准备阶段后ABC的值为123；</li>
+</ul>
+<h3 id="解析阶段"><a href="#解析阶段" class="headerlink" title="解析阶段"></a>解析阶段</h3><p>这个阶段主要是将字节码文件中的符号引用转化为直接引用，这个阶段发生的时间段并不确定，某些情况下解析可以发生在初始化阶段之后，这是为了支持Java语言的运行时绑定。JVM可以根据需求来判断到底要在类被加载器加载的时候就对常量池中的符号引用进行解析，还是等到另一个符号引用将要被使用的时候去解析。</p>
+<ul>
+<li>符号引用：符合引用是以一组符号来描述所引用的目标，符号可以可是以任何形式的字面量，只要使用时能无歧义的定位到目标即可。符号引用的对象并不一定加载到内存中</li>
+<li>直接引用：直接引用是直接指向目标的指针、相对偏移量或是一个能间接定位到目标的句柄。相对于符号引用，被直接引用的对象一定已经加载到内存中。</li>
+</ul>
+<p>解析主要针对类或接口、字段、类方法、类接口、接口方法、方法类型、方法句柄和调用点限定符7种符号引用，这里主要讲前面4种。</p>
+<h5 id="类或接口的解析"><a href="#类或接口的解析" class="headerlink" title="类或接口的解析"></a>类或接口的解析</h5><p>假设在类D中要把一个未解析过的符号引用N解析为对一个类或接口C的直接引用，JVM有如下操作：</p>
+<ul>
+<li>C是<strong>非数组类型</strong>，JVM通过N代表的全限定名传递给D的类加载器去加载C。此过程中可能出去C继承的父类或实现的接口的加载</li>
+<li>C是数组类型，同时元素类型是引用类型，通过上面步骤去加载数组元素的引用类型，并由JVM生成一个代表数组C维度和元素的数组对象</li>
+<li>解析完成之后进行符号引用验证，确认D对C的引用权限</li>
+</ul>
+<h5 id="字段解析"><a href="#字段解析" class="headerlink" title="字段解析"></a>字段解析</h5><p>解析一个字段符号引用，会先对字段所属的类或者接口的符号引用先进行解析。解析到所属的类或接口C后JVM按照如下规范对字段进行搜索：</p>
+<ul>
+<li>若C中包含了简单名称和字段描述都符合的字段，则返回这个字段的直接引用</li>
+<li>若C中实现了接口，则按照继承关系从下往上搜索各个接口及其父接口，如匹配到简单名称和字段描述都一致的字段，则返回该字段的直接引用</li>
+<li>若C不是java.lang.Object，按照继承关系从下往上搜索父类，如匹配到简单名称和字段描述都一致的字段，则返回该字段的直接引用</li>
+<li>查找失败，抛出java.lang.NoSuchFieldError</li>
+<li>解析完成后对字段进行权限验证</li>
+</ul>
+<h5 id="类方法解析"><a href="#类方法解析" class="headerlink" title="类方法解析"></a>类方法解析</h5><p>与字段解析一样，解析一个类方法也是要先解析到这个方法所属的类或者接口。解析到所属的类或接口C后JVM按照如下规范对字段进行搜索：</p>
+<ul>
+<li>若解析发现C是一个接口，则抛出异常</li>
+<li>剩余步骤和字段解析一致，不再赘述</li>
+</ul>
+<h5 id="接口方法解析"><a href="#接口方法解析" class="headerlink" title="接口方法解析"></a>接口方法解析</h5><p>与类方法解析相比较：</p>
+<ul>
+<li>若解析返现C是一个类，则抛出异常</li>
+<li>由于接口中所有的方法都是public的，省去权限校验这一步骤</li>
+</ul>
+<h3 id="初始化阶段"><a href="#初始化阶段" class="headerlink" title="初始化阶段"></a>初始化阶段</h3><p><strong>类的初始化是类加载过程的最后一步，到了初始化阶段才开始真正执行java代码</strong></p>
+<p>这个阶段会执行类的<clint>()，为类变量进行显示的赋值操作。类的<clint>是编译器自动收集类变量以及静态代码块后自动合并生成的。</clint></clint></p>
+<ul>
+<li><clint>()对于类和接口来说这个方法并不是必须的。</clint></li>
+<li><clint>()中，静态语句只能访问定义在它之前定义的静态变量，定义在它之后的静态变量，可以赋值，但不能访问。</clint></li>
+<li>子类<clint>()不需要显示的调用父类的构造器，JVM保证子类的<clint>()执行之前，父类的<clint>()已经执行完毕。</clint></clint></clint></li>
+<li>由于父类的<clint>()先执行，所以父类的静态语句优先与子类的静态语句执行</clint></li>
+<li>先对类，接口的执行<clint>()时并不需要执行父接口的<clint>()方法，只有使用父接口定义的变量时，父接口才会初始化。接口的实现类初始化时也不会调用接口的<clint>()</clint></clint></clint></li>
+<li>JVM保证一个类的<clint>()执行时线程安全的，多线程执行类的<clint>()时只能有一个被执行，其余线程等待（执行完毕后其他线程不再进入<clint>()）。如果一个类的<clint>()执行耗时操作，可能会造成<strong>多进程阻塞</strong></clint></clint></clint></clint></li>
+</ul>
+<h3 id="使用阶段"><a href="#使用阶段" class="headerlink" title="使用阶段"></a>使用阶段</h3><p>这个没啥好说的，只要代表类的Class对象还能被引用到，类就还在使用当中。</p>
+<h3 id="卸载阶段"><a href="#卸载阶段" class="headerlink" title="卸载阶段"></a>卸载阶段</h3><p>一个类何时结束生命周期，取决于代表它的Class对象何时结束生命周期。<strong>类的卸载，其实就是方法区中的类的回收</strong>。判断一个类是否可以进行回收，需要同时满足下面3个条件：</p>
+<ul>
+<li>该类所有的实例对象都已经被回收，java堆中不存在任何该类的实例对象</li>
+<li>加载该类的ClassLoader已经被回收</li>
+<li>该类的java.lang.Class对象没有在任何地方被引用到，无法在任何地方通过反射访问到该类的方法。</li>
+</ul>
+<p>上面条件仅仅说明<strong>该类可以进行回收，但是并不想类的实例对象一样，不使用了就立马进行回收</strong>。</p>
+<p><img src="../../images/Java虚拟机/类回收示意图.png" alt="类回收示意图"></p>
+<p>如上图所示，当左侧所有的引用都消失时，类可以被回收。</p>
+<p>Java虚拟机自带的类加载器包括根类加载器、扩展类加载器和系统类加载器。<strong>由Java虚拟机自带的类加载器所加载的类，在虚拟机的生命周期中，始终不会被卸载</strong>。Java虚拟机本身会始终引用这些类加载器，而这些类加载器则会始终引用它们所加载的类的Class对象，因此这些Class对象始终是可触及的。<strong>由用户自定义的类加载器加载的类是可以被卸载的。</strong></p>
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <br>
+        <div>
+    
+        <div style="text-align:center;color:#ccc;font-size:14px">-------------THE END-------------</div>
+    
+</div>
+      </div>
+    
+
+    <div>
+      
+        <br>
+        
+<style>.my_post_copyright{padding:1px 0 1px 20px!important;margin-left:5px;border-left:3px solid #ed3726}.my_post_copyright p{line-height:1.5;margin:10px 0}.my_post_copyright p span{font-weight:700;padding-right:15px}</style>
+<div class="my_post_copyright">
+  <p><span>本文标题:</span><a href="/JVM之类加载机制20180702/">JVM之类加载机制</a></p>
+  <p><span>文章作者:</span><a href="/" title="访问 Lebens 的个人博客">Lebens</a></p>
+  <p><span>发布时间:</span>2018年07月02日 - 14:07</p>
+  <p><span>最后更新:</span>2018年07月07日 - 09:07</p>
+  <p><span>原始链接:</span><a href="/JVM之类加载机制20180702/" title="JVM之类加载机制">http://lebens.top/JVM之类加载机制20180702/</a>
+    <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://lebens.top/JVM之类加载机制20180702/" aria-label="复制成功！"></i></span>
+  </p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
+</div>
+<script>var clipboard=new Clipboard(".fa-clipboard");clipboard.on("success",$(function(){$(".fa-clipboard").click(function(){swal({title:"",text:"复制成功",html:!1,timer:500,showConfirmButton:!1})})}))</script>
+
+      
+    </div>
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JVM/" rel="tag"># JVM</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/HashTable简介20180613/" rel="next" title="HashTable简介">
+                <i class="fa fa-chevron-left"></i> HashTable简介
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars1.githubusercontent.com/u/10048597?v=4" alt="Lebens">
+            
+              <p class="site-author-name" itemprop="name">Lebens</p>
+              <p class="site-description motion-element" itemprop="description">我相信，梦里能到达的地方，总有一天，脚步也能到达</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">14</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/shuangpinai" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/44348e1d53c4" target="_blank" title="简书">
+                    
+                      <i class="fa fa-fw fa-globe"></i>简书</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.csdn.net/zzhouqianq" title="易凌风" target="_blank">易凌风</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://cdevlab.top/" title="chendong" target="_blank">chendong</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#加载阶段"><span class="nav-number">1.</span> <span class="nav-text">加载阶段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#验证阶段"><span class="nav-number">2.</span> <span class="nav-text">验证阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#文件格式验证"><span class="nav-number">2.0.1.</span> <span class="nav-text">文件格式验证</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#元数据验证"><span class="nav-number">2.0.2.</span> <span class="nav-text">元数据验证</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#字节码验证"><span class="nav-number">2.0.3.</span> <span class="nav-text">字节码验证</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#符号引用验证"><span class="nav-number">2.0.4.</span> <span class="nav-text">符号引用验证</span></a></li></ol></li></ol><li class="nav-item nav-level-3"><a class="nav-link" href="#准备阶段"><span class="nav-number">3.</span> <span class="nav-text">准备阶段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解析阶段"><span class="nav-number">4.</span> <span class="nav-text">解析阶段</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#类或接口的解析"><span class="nav-number">4.0.1.</span> <span class="nav-text">类或接口的解析</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#字段解析"><span class="nav-number">4.0.2.</span> <span class="nav-text">字段解析</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#类方法解析"><span class="nav-number">4.0.3.</span> <span class="nav-text">类方法解析</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#接口方法解析"><span class="nav-number">4.0.4.</span> <span class="nav-text">接口方法解析</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#初始化阶段"><span class="nav-number">5.</span> <span class="nav-text">初始化阶段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用阶段"><span class="nav-number">6.</span> <span class="nav-text">使用阶段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#卸载阶段"><span class="nav-number">7.</span> <span class="nav-text">卸载阶段</span></a></li></div>
+            
+
+          </div>
+        </section>
+      
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+  <i class="fa fa-star"></i>
+</span>
+  <span class="author" itemprop="copyrightHolder">Lebens</span>
+</div>
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">function proceedsearch(){$("body").append('<div class="search-popup-overlay local-search-pop-overlay"></div>').css("overflow","hidden"),$(".search-popup-overlay").click(onPopupClose),$(".popup").toggle();var t=$("#local-search-input");t.attr("autocapitalize","none"),t.attr("autocorrect","off"),t.focus()}var isfetched=!1,isXml=!0,search_path="search.xml";0===search_path.length?search_path="search.xml":/json$/i.test(search_path)&&(isXml=!1);var path="/"+search_path,onPopupClose=function(t){$(".popup").hide(),$("#local-search-input").val(""),$(".search-result-list").remove(),$("#no-result").remove(),$(".local-search-pop-overlay").remove(),$("body").css("overflow","")},searchFunc=function(t,e,o){"use strict";$("body").append('<div class="search-popup-overlay local-search-pop-overlay"><div id="search-loading-icon"><i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i></div></div>').css("overflow","hidden"),$("#search-loading-icon").css("margin","20% auto 0 auto").css("text-align","center"),$.ajax({url:t,dataType:isXml?"xml":"json",async:!0,success:function(t){isfetched=!0,$(".popup").detach().appendTo(".header-inner");var n=isXml?$("entry",t).map(function(){return{title:$("title",this).text(),content:$("content",this).text(),url:$("url",this).text()}}).get():t,r=document.getElementById(e),s=document.getElementById(o),a=function(){var t=r.value.trim().toLowerCase(),e=t.split(/[\s\-]+/);e.length>1&&e.push(t);var o=[];if(t.length>0&&n.forEach(function(n){var r=!1,s=0,a=0,i=n.title.trim(),c=i.toLowerCase(),l=n.content.trim().replace(/<[^>]+>/g,""),h=l.toLowerCase(),p=decodeURIComponent(n.url),u=[],f=[];if(""!=i&&(e.forEach(function(t){function e(t,e,o){var n=t.length;if(0===n)return[];var r=0,s=[],a=[];for(o||(e=e.toLowerCase(),t=t.toLowerCase());(s=e.indexOf(t,r))>-1;)a.push({position:s,word:t}),r=s+n;return a}u=u.concat(e(t,c,!1)),f=f.concat(e(t,h,!1))}),(u.length>0||f.length>0)&&(r=!0,s=u.length+f.length)),r){[u,f].forEach(function(t){t.sort(function(t,e){return e.position!==t.position?e.position-t.position:t.word.length-e.word.length})});function d(e,o,n,r){for(var s=r[r.length-1],i=s.position,c=s.word,l=[],h=0;i+c.length<=n&&0!=r.length;){c===t&&h++,l.push({position:i,length:c.length});var p=i+c.length;for(r.pop();0!=r.length&&(s=r[r.length-1],i=s.position,c=s.word,p>i);)r.pop()}return a+=h,{hits:l,start:o,end:n,searchTextCount:h}}var g=[];0!=u.length&&g.push(d(0,0,i.length,u));for(var v=[];0!=f.length;){var $=f[f.length-1],C=$.position,m=$.word,x=C-20,w=C+80;x<0&&(x=0),w<C+m.length&&(w=C+m.length),w>l.length&&(w=l.length),v.push(d(0,x,w,f))}v.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hits.length!==e.hits.length?e.hits.length-t.hits.length:t.start-e.start});var y=parseInt("1");y>=0&&(v=v.slice(0,y));function T(t,e){var o="",n=e.start;return e.hits.forEach(function(e){o+=t.substring(n,e.position);var r=e.position+e.length;o+='<b class="search-keyword">'+t.substring(e.position,r)+"</b>",n=r}),o+=t.substring(n,e.end)}var b="";0!=g.length?b+="<li><a href='"+p+"' class='search-result-title'>"+T(i,g[0])+"</a>":b+="<li><a href='"+p+"' class='search-result-title'>"+i+"</a>",v.forEach(function(t){b+="<a href='"+p+'\'><p class="search-result">'+T(l,t)+"...</p></a>"}),b+="</li>",o.push({item:b,searchTextCount:a,hitCount:s,id:o.length})}}),1===e.length&&""===e[0])s.innerHTML='<div id="no-result"><i class="fa fa-search fa-5x" /></div>';else if(0===o.length)s.innerHTML='<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>';else{o.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hitCount!==e.hitCount?e.hitCount-t.hitCount:e.id-t.id});var a='<ul class="search-result-list">';o.forEach(function(t){a+=t.item}),a+="</ul>",s.innerHTML=a}};r.addEventListener("input",a),$(".local-search-pop-overlay").remove(),$("body").css("overflow",""),proceedsearch()}})};$(".popup-trigger").click(function(t){t.stopPropagation(),!1===isfetched?searchFunc(path,"local-search-input","local-search-result"):proceedsearch()}),$(".popup-btn-close").click(onPopupClose),$(".popup").click(function(t){t.stopPropagation()}),$(document).on("keyup",function(t){27===t.which&&$(".search-popup").is(":visible")&&onPopupClose()})</script></div></body></header></html>
