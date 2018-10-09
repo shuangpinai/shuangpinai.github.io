@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[Android float 四舍五入的一个问题]]></title>
+    <url>%2FAndroid-float-%E5%9B%9B%E8%88%8D%E4%BA%94%E5%85%A5%E7%9A%84%E4%B8%80%E4%B8%AA%E9%97%AE%E9%A2%9820181009%2F</url>
+    <content type="text"><![CDATA[在写代码过程中处理数据的四舍五入的四舍五入是一个很常见的问题，今天这篇博客的主要目的是描述处理四舍五入并保留2位小数遇到的一个比较奇怪的问题。我们常用的处理数据的四舍五入并保留2位小数的方式有如下几种, 以0.195为例：Math方式：1System.out.println(Math.round(0.195 * 100) / 100.f); //输出0.2 BigDecimal方式： 123BigDecimal temp = new BigDecimal(0.195, MathContext.UNLIMITED);BigDecimal bigDecimal = temp.setScale(2, BigDecimal.ROUND_UP);System.out.println(bigDecimal.toString()); //输出0.20 DecimalFormat方式： 1234567DecimalFormat decimalFormat = new DecimalFormat("#.##");System.out.println(decimalFormat.format(0.195)); //输出0.2或者DecimalFormat decimalFormat = new DecimalFormat("0.00");System.out.println(decimalFormat.format(0.195)); //输出0.20 这里的2种方式区别在于是否需要用0补全位数 敲黑板，String模式，今天发现问题的方式 12先来一种正常的：System.out.println(String.format(Locale.CHINA, "%.2f", 0.195)); //输出0.20 上面的写法很完美，符合一切预期，下面是出问题的点 1System.out.println(String.format(Locale.CHINA, "%.2f", 0.195f)); //输出0.19 看出上面两种方式的区别了嘛，就是在于被格式化的数据是double和float区别。 其实上面的DecimalFormat当使用0.195f时也会出现0.19的结果。 目前还没找到出现这种情况的原因，这里写个博客先记录一下，等找到问题，再来更新。]]></content>
+      <categories>
+        <category>Android</category>
+      </categories>
+      <tags>
+        <tag>Android</tag>
+        <tag>Java</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[Https安全链接建立过程]]></title>
     <url>%2FHttps%E5%AE%89%E5%85%A8%E9%93%BE%E6%8E%A5%E5%BB%BA%E7%AB%8B%E8%BF%87%E7%A8%8B20180905%2F</url>
     <content type="text"><![CDATA[在了解https链接建立的过程前，我们现在了解一下相关的概念。什么是httpshttps 并非是一种应用层新的协议，只是http通信的部分接口被SSL和TSL协议替换而已，其实就是披着安全层外壳的http。通常http直接和TCP通信，当时用SSL时，http先和SSL通信再和TLS通信。https相对于http多了加密、认证以及完整性保护的功能。SSL和TLSSSL最初由网景公司开发，后来被注意到IETF，在SSL的基础上又反正出TLS协议。目前流行的版本是SSL3.0和TLS1.0。证书机构存在的意义https认证过程中，重要的一步是身份的认证。客户端通过服务器发放的公钥来跟服务器通信，但是这个过程客户端其实是无法确定服务器的身份的，因为无法确定公钥的来源。这个时候就需要证书机构了，数字证书认证机构是客户端和服务端双方都信赖的第三方机构。服务器将要发放的公钥给证书机构，证书机构确定服务器身份后，对服务器公钥做数字签名。当服务器要跟客户端通信时，就将证书发放给客户端，客户端通过接收到证书后即可用证书机构的公钥验证服务器的身份，同时获得服务器的真正公钥。现在多数浏览器都会内置证书机构的公钥，省去了证书公钥获取的这一步骤。Https安全链接建立主要有如下几个步骤：由客户端发送Client Hello报文开始SSL通信，报文中包含客户端支持的SSL版本、加密组件列表。当服务器接收到客户端的请求，服务器已Server Hello作为应答，其中包括SSL版本以及从客户端加密组件列表筛选出来的加密组件内容。接着，服务器发送certificate报文，将服务器证书传递给客户端。下一步，服务器发送Server Hello Done 报文来结束SSL最初的握手协商过程。紧接着，客户端发送Client Key Exchange 报文用于回应SSL第一次握手结束。报文中包含一种称为Pre-master secret的随机字符串，用于后续的对称加密的密码。第三步中服务器传递过来的证书通过数字证书认证机构验证后可以获得服务器的非对称加密公钥，报文中的Pre-master secret字符串使用这个公钥加密。而后，客户端会继续发送Change Cipher Spec 报文用以通知服务器，之后的报文将使用Pre-master secret密钥进行加密客户端最后发送，Finished报文，包含连接至今全部报文的整体校验值，服务器能正确揭秘加密报文则本次握手成功。服务器发送Change Cipher spec 报文服务器发送Finished报文当服务器和客户端交换完Finished报文之后，SSL连接建立完成，后续开始应用层协议通信，即开始发送HTTP请求应用层协议通信，即开始发送HTTP请求上面11个步骤是https建立SSL通信的必要步骤。当前然开始通信之初，tcp三次握手是必不可少的，上文中省略了。Https链接断开这里就比较简略了，只是在传统的4次挥手中多传递了一次Alert Message: Encrypted Alert。]]></content>
