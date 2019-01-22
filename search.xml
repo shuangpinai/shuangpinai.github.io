@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title><![CDATA[java基本数据类型]]></title>
+    <url>%2Fjava%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B20190122%2F</url>
+    <content type="text"><![CDATA[java的基本数据类型有如下8种：注意，平时最常用的string并不是基本数据类型，是引用类型。]]></content>
+      <categories>
+        <category>Java</category>
+      </categories>
+      <tags>
+        <tag>java基础</tag>
+      </tags>
+  </entry>
+  <entry>
     <title><![CDATA[EditText默认不弹出键盘]]></title>
     <url>%2FEditText%E9%BB%98%E8%AE%A4%E4%B8%8D%E5%BC%B9%E5%87%BA%E9%94%AE%E7%9B%9820190121%2F</url>
     <content type="text"><![CDATA[本文主要介绍一种EditText废话不多说直接说解决方案只需要EditText的父布局加上如下属性即可：12android:focusable=&quot;true&quot;android:focusableInTouchMode=&quot;true&quot; 完美解决EditText获取焦点后直接弹出输入法的问题。]]></content>
