@@ -1,0 +1,425 @@
+<!DOCTYPE html><html class="theme-next mist use-motion" lang="zh-CN"><header id="header" class="header" itemscope itemtype="//schema.org/WPHeader"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><meta name="theme-color" content="#222"><script></script><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"><link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css"><link href="/css/main.css?v=5.1.3" rel="stylesheet" type="text/css"><link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.3"><link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.3"><link rel="mask-icon" href="/images/logo.svg?v=5.1.3" color="#222"><meta name="keywords" content="system,"><meta name="description" content="下文皆使用Client表示操作的App，Server表示需要被唤起的远端App，Server的包名为“com.jxx.server”1. ComponentName使用ComponentName唤起Server步骤很简单，需要注意的是Server的Activity需要在manifest配置种设置exported为tru"><meta name="keywords" content="system"><meta property="og:type" content="article"><meta property="og:title" content="App相互唤醒的几种方式"><meta property="og:url" content="http://lebens.top/App相互唤醒的几种方式20190320/index.html"><meta property="og:site_name" content="Lebens"><meta property="og:description" content="下文皆使用Client表示操作的App，Server表示需要被唤起的远端App，Server的包名为“com.jxx.server”1. ComponentName使用ComponentName唤起Server步骤很简单，需要注意的是Server的Activity需要在manifest配置种设置exported为trueServer的配置如下：12&amp;lt;activity android:name"><meta property="og:locale" content="zh-CN"><meta property="og:updated_time" content="2019-03-20T08:49:16.506Z"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="App相互唤醒的几种方式"><meta name="twitter:description" content="下文皆使用Client表示操作的App，Server表示需要被唤起的远端App，Server的包名为“com.jxx.server”1. ComponentName使用ComponentName唤起Server步骤很简单，需要注意的是Server的Activity需要在manifest配置种设置exported为trueServer的配置如下：12&amp;lt;activity android:name"><script type="text/javascript" id="hexo.configurations">var NexT=window.NexT||{},CONFIG={root:"/",scheme:"Mist",version:"5.1.3",sidebar:{position:"left",display:"post",offset:12,b2t:!1,scrollpercent:!1,onmobile:!1},fancybox:!0,tabs:!0,motion:{enable:!0,async:!1,transition:{post_block:"fadeIn",post_header:"slideDownIn",post_body:"slideDownIn",coll_header:"slideLeftIn",sidebar:"slideUpIn"}},duoshuo:{userId:"0",author:"博主"},algolia:{applicationID:"",apiKey:"",indexName:"",hits:{per_page:10},labels:{input_placeholder:"Search for Posts",hits_empty:"We didn't find any results for the search: ${query}",hits_stats:"${hits} results found in ${time} ms"}}}</script><link rel="canonical" href="http://lebens.top/App相互唤醒的几种方式20190320/"><title>App相互唤醒的几种方式 | Lebens</title><style>.forkme{display:none}@media (min-width:768px){.forkme{display:inline}}</style></head><body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN"><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="container sidebar-position-left page-post-detail"><div class="headband"></div><div class="forkme"><a target="_blank" href="https://github.com/shuangpinai"><img style="position:absolute;top:0;left:0;border:0" src="https://camo.githubusercontent.com/567c3a48d796e2fc06ea80409cc9dd82bf714434/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png"></a></div><header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="header-inner"><div class="site-brand-wrapper"><div class="site-meta"><div class="custom-logo-site-title"><a href="/" class="brand" rel="start"><span class="logo-line-before"><i></i></span> <span class="site-title">Lebens</span> <span class="logo-line-after"><i></i></span></a></div><p class="site-subtitle"></p></div><div class="site-nav-toggle"><button><span class="btn-bar"></span> <span class="btn-bar"></span> <span class="btn-bar"></span></button></div></div><nav class="site-nav"><ul id="menu" class="menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i><br>主页</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i><br>分类</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i><br>标签</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i><br>日志</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i><br>关于我</a></li><li class="menu-item menu-item-search"><a href="javascript:;" class="popup-trigger"><i class="menu-item-icon fa fa-search fa-fw"></i><br>搜索</a></li></ul><div class="site-search"><div class="popup search-popup local-search-popup"><div class="local-search-header clearfix"><span class="search-icon"><i class="fa fa-search"></i> </span><span class="popup-btn-close"><i class="fa fa-times-circle"></i></span><div class="local-search-input-wrapper"><input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input"></div></div><div id="local-search-result"></div></div></div></nav><script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script><link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet"><style>.pace .pace-progress{background:#00d9cf;height:2px}.pace .pace-progress-inner{box-shadow:0 0 10px #1e92fb,0 0 5px #1e92fb}.pace .pace-activity{border-top-color:#1e92fb;border-left-color:#1e92fb}</style></div></header><main id="main" class="main"><div class="main-inner"><div class="content-wrap"><div id="content" class="content"><div id="posts" class="posts-expand"><article class="post post-type-normal" itemscope itemtype="http://schema.org/Article"><div class="post-block"><link itemprop="mainEntityOfPage" href="http://lebens.top/App相互唤醒的几种方式20190320/"><span hidden itemprop="author" itemscope itemtype="http://schema.org/Person"><meta itemprop="name" content="Lebens"><meta itemprop="description" content=""><meta itemprop="image" content="https://avatars1.githubusercontent.com/u/10048597?v=4"></span><span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization"><meta itemprop="name" content="Lebens"></span><header class="post-header"><h1 class="post-title" itemprop="name headline">App相互唤醒的几种方式</h1><div class="post-meta"><span class="post-time"><span class="post-meta-item-icon"><i class="fa fa-calendar-o"></i> </span><span class="post-meta-item-text">发表于</span> <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-20T16:47:42+08:00">2019-03-20 </time></span><span class="post-category"><span class="post-meta-divider">|</span> <span class="post-meta-item-icon"><i class="fa fa-folder-o"></i> </span><span class="post-meta-item-text">分类于</span> <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span></span></div></header><div class="post-body" itemprop="articleBody"><p>下文皆使用Client表示操作的App，Server表示需要被唤起的远端App，Server的包名为“com.jxx.server”</p><h3 id="1-ComponentName"><a href="#1-ComponentName" class="headerlink" title="1. ComponentName"></a>1. ComponentName</h3><p>使用ComponentName唤起Server步骤很简单，需要注意的是Server的Activity需要在manifest配置种设置exported为true</p><p>Server的配置如下：<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;activity android:name=&quot;com.jxx.server.ServerActivity&quot;</span><br><span class="line">    android:exported=&quot;true&quot;/&gt;</span><br></pre></td></tr></table></figure><p></p>
+<a id="more"></a>
+<p>Client调用如下：<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Intent intent1 = new Intent();                                                                   </span><br><span class="line">ComponentName componentName = new ComponentName(&quot;com.jxx.server&quot;, &quot;com.jxx.server.ServerActivity&quot;);</span><br><span class="line">intent1.setComponent(componentName);                                                             </span><br><span class="line">intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);                                                 </span><br><span class="line">startActivity(intent1);</span><br></pre></td></tr></table></figure><p></p>
+<p>Intent中添加ComponentName还有另外一种写法<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Intent intent2 = new Intent();                                                                   </span><br><span class="line">intent2.setClassName(&quot;jxx.com.server&quot;, &quot;jxx.com.server.MainActivity&quot;);                                                             </span><br><span class="line">intent2.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);                                                 </span><br><span class="line">startActivity(intent1);</span><br></pre></td></tr></table></figure><p></p>
+<p>只不过setClassName内部帮我们new ComponentName的实例<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public @NonNull Intent setClassName(@NonNull String packageName, @NonNull String className) &#123;</span><br><span class="line">    mComponent = new ComponentName(packageName, className);</span><br><span class="line">    return this;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p></p>
+<p>既然是用Intent来唤起Activity，那就能使用Intent的特性，例如使用Bundle传递数据<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Intent intent1 = new Intent();                                                                   </span><br><span class="line">ComponentName componentName = new ComponentName(&quot;com.jxx.server&quot;, &quot;com.jxx.server.ServerActivity&quot;);</span><br><span class="line">intent1.setComponent(componentName);   </span><br><span class="line"></span><br><span class="line">Bundle bundle1 = new Bundle();                     </span><br><span class="line">bundle1.putString(&quot;remote_invoke&quot;, &quot;from_client&quot;); </span><br><span class="line">intent1.putExtras(bundle1);                        </span><br><span class="line">                                                          </span><br><span class="line">intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);                                                 </span><br><span class="line">startActivity(intent1);</span><br></pre></td></tr></table></figure><p></p>
+<p>在Server端提取数据也很简单<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Bundle bundle = getIntent().getExtras();</span><br></pre></td></tr></table></figure><p></p>
+<h3 id="2-隐式跳转，Uri"><a href="#2-隐式跳转，Uri" class="headerlink" title="2. 隐式跳转，Uri"></a>2. 隐式跳转，Uri</h3><p>Android中唤起拨号页面是这样的<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Intent intent =  new Intent(Intent.ACTION_CALL,Uri.parse(&quot;tel:&quot; + phoneNumber));</span><br><span class="line">startActivity(intent);</span><br></pre></td></tr></table></figure><p></p>
+<p>其实就是用Uri的形式唤起Server，并传递数据，我们来自己实现一下。<br>这种方式下，Server端的配置如下，必须添加要有action、data以及category：<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&lt;activity android:name=&quot;.SecondActivity&quot;&gt;                              </span><br><span class="line">                                                                       </span><br><span class="line">    &lt;intent-filter&gt;                                                    </span><br><span class="line">        &lt;action android:name=&quot;com.jxx.server.ServerActivity&quot; /&gt;</span><br><span class="line">        &lt;data                                                          </span><br><span class="line">            android:host=&quot;com.jxx.server&quot;                      </span><br><span class="line">            android:scheme=&quot;ServerActivity&quot; /&gt;                                 </span><br><span class="line">        &lt;category android:name=&quot;android.intent.category.DEFAULT&quot; /&gt;    </span><br><span class="line">    &lt;/intent-filter&gt;                                                   </span><br><span class="line">                                                                       </span><br><span class="line">&lt;/activity&gt;</span><br></pre></td></tr></table></figure><p></p>
+<p>Client调用:<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Intent intent2 = new Intent(&quot;com.jxx.server.ServerActivity&quot;);            </span><br><span class="line">Uri uri = Uri.parse(&quot;ServerActivity://com.jxx.server?remote_invoke=from_client&quot;);</span><br><span class="line">intent2.setData(uri);                                                            </span><br><span class="line">startActivity(intent2);</span><br></pre></td></tr></table></figure><p></p>
+<p>我们看到uri中？后面还加了”remote_invoke=from_client”,这其实是用来给Server传递数据用的，我们可以在Server中解析出来<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Uri uri = getIntent().getData();</span><br><span class="line">String from = uri.getQueryParameter(&quot;remote_invoke&quot;);</span><br><span class="line">//from = &quot;from_client&quot;</span><br></pre></td></tr></table></figure><p></p>
+<h3 id="3-通过PackageManager唤起"><a href="#3-通过PackageManager唤起" class="headerlink" title="3. 通过PackageManager唤起"></a>3. 通过PackageManager唤起</h3><p>只需要知道Server的包名即可<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">PackageManager packageManager = getPackageManager();                         </span><br><span class="line">Intent intent3 = packageManager.getLaunchIntentForPackage(&quot;com.jxx.server&quot;);</span><br><span class="line">if (intent3 != null) &#123;                                                       </span><br><span class="line">    startActivity(intent3);                                                  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p></p>
+<h3 id="4-静态广播接收者"><a href="#4-静态广播接收者" class="headerlink" title="4. 静态广播接收者"></a>4. 静态广播接收者</h3><p>只需要Server端注册一个静态广播接收者，在广播接收者中跳转Activity即可，客户端只需要发送一个广播。</p>
+<p>Server定义广播接收者：<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class ServerBroadCastReceiver extends BroadcastReceiver &#123;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void onReceive(Context context, Intent intent) &#123;</span><br><span class="line">        Intent intent1 = new Intent(context, MainActivity.class);</span><br><span class="line">        //注意，这里必须要添加这个flag，</span><br><span class="line">        //原因在于这里的context并不是一个Activity类型的context，无法直接开启activity</span><br><span class="line">        intent1.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);</span><br><span class="line">        context.startActivity(intent1);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p></p>
+<p>并在manifest中注册为静态广播接收者，并定义action<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;receiver                                                       </span><br><span class="line">    android:name=&quot;.ServerBroadCastReceiver&quot;                     </span><br><span class="line">    android:enabled=&quot;true&quot;                                      </span><br><span class="line">    android:exported=&quot;true&quot;&gt;                                    </span><br><span class="line">    &lt;intent-filter&gt;                                             </span><br><span class="line">        &lt;action android:name=&quot;server.ServerBroadCastReceiver&quot; /&gt;</span><br><span class="line">    &lt;/intent-filter&gt;                                                                                              </span><br><span class="line">&lt;/receiver&gt;</span><br></pre></td></tr></table></figure><p></p>
+<p>Client中发送广播即可<br></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Intent intent4 = new Intent(&quot;server.ServerBroadCastReceiver&quot;); </span><br><span class="line">//这里加上componentName用于解决8.0以上不能唤起的问题                                     </span><br><span class="line">ComponentName componentName = new ComponentName(&quot;com.jxx.server&quot;, &quot;com.jxx.server.ServerBroadCastReceiver&quot;);</span><br><span class="line">intent4.setComponent(componentName);                                                                        </span><br><span class="line">sendBroadcast(intent4);</span><br></pre></td></tr></table></figure><p></p>
+<h3 id="5-Service"><a href="#5-Service" class="headerlink" title="5. Service"></a>5. Service</h3><p>在<a href="https://juejin.im/post/5c715d90e51d4520f01783f4" target="_blank" rel="noopener">Android Service详解(二)</a>中我们介绍了如何通过Service实现IPC通信，这当然也能用来唤起App，这里就不再过多介绍了，有兴趣的同学可以点击查看。</p>
+      
+    </div>
+    
+    
+    
+
+    
+      <div>
+        <br>
+        <div>
+    
+        <div style="text-align:center;color:#ccc;font-size:14px">-------------THE END-------------</div>
+    
+</div>
+      </div>
+    
+
+    <div>
+      
+        <br>
+        
+<style>.my_post_copyright{padding:1px 0 1px 20px!important;margin-left:5px;border-left:3px solid #ed3726}.my_post_copyright p{line-height:1.5;margin:10px 0}.my_post_copyright p span{font-weight:700;padding-right:15px}</style>
+<div class="my_post_copyright">
+  <p><span>本文标题:</span><a href="/App相互唤醒的几种方式20190320/">App相互唤醒的几种方式</a></p>
+  <p><span>文章作者:</span><a href="/" title="访问 Lebens 的个人博客">Lebens</a></p>
+  <p><span>发布时间:</span>2019年03月20日 - 16:03</p>
+  <p><span>最后更新:</span>2019年03月20日 - 16:03</p>
+  <p><span>原始链接:</span><a href="/App相互唤醒的几种方式20190320/" title="App相互唤醒的几种方式">http://lebens.top/App相互唤醒的几种方式20190320/</a>
+    <span class="copy-path" title="点击复制文章链接"><i class="fa fa-clipboard" data-clipboard-text="http://lebens.top/App相互唤醒的几种方式20190320/" aria-label="复制成功！"></i></span>
+  </p>
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
+</div>
+<script>var clipboard=new Clipboard(".fa-clipboard");clipboard.on("success",$(function(){$(".fa-clipboard").click(function(){swal({title:"",text:"复制成功",html:!1,timer:500,showConfirmButton:!1})})}))</script>
+
+      
+    </div>
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/system/" rel="tag"># system</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/Android-Service详解-二20190223/" rel="next" title="Android Service详解(二)">
+                <i class="fa fa-chevron-left"></i> Android Service详解(二)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://avatars1.githubusercontent.com/u/10048597?v=4" alt="Lebens">
+            
+              <p class="site-author-name" itemprop="name">Lebens</p>
+              <p class="site-description motion-element" itemprop="description">我相信，梦里能到达的地方，总有一天，脚步也能到达</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">41</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          <div class="links-of-author motion-element">
+            
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/shuangpinai" target="_blank" title="GitHub">
+                    
+                      <i class="fa fa-fw fa-globe"></i>GitHub</a>
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://www.jianshu.com/u/44348e1d53c4" target="_blank" title="简书">
+                    
+                      <i class="fa fa-fw fa-globe"></i>简书</a>
+                </span>
+              
+            
+          </div>
+
+          
+          
+
+          
+          
+            <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+              <div class="links-of-blogroll-title">
+                <i class="fa fa-fw fa-link"></i>
+                友情链接
+              </div>
+              <ul class="links-of-blogroll-list">
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://blog.csdn.net/zzhouqianq" title="易凌风" target="_blank">易凌风</a>
+                  </li>
+                
+                  <li class="links-of-blogroll-item">
+                    <a href="http://cdevlab.top/" title="chendong" target="_blank">chendong</a>
+                  </li>
+                
+              </ul>
+            </div>
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-ComponentName"><span class="nav-number">1.</span> <span class="nav-text">1. ComponentName</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-隐式跳转，Uri"><span class="nav-number">2.</span> <span class="nav-text">2. 隐式跳转，Uri</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-通过PackageManager唤起"><span class="nav-number">3.</span> <span class="nav-text">3. 通过PackageManager唤起</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-静态广播接收者"><span class="nav-number">4.</span> <span class="nav-text">4. 静态广播接收者</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-Service"><span class="nav-number">5.</span> <span class="nav-text">5. Service</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+  <i class="fa fa-star"></i>
+</span>
+  <span class="author" itemprop="copyrightHolder">Lebens</span>
+</div>
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">"[object Function]"!==Object.prototype.toString.call(window.Promise)&&(window.Promise=null)</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.3"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.3"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.3"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.3"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">function proceedsearch(){$("body").append('<div class="search-popup-overlay local-search-pop-overlay"></div>').css("overflow","hidden"),$(".search-popup-overlay").click(onPopupClose),$(".popup").toggle();var t=$("#local-search-input");t.attr("autocapitalize","none"),t.attr("autocorrect","off"),t.focus()}var isfetched=!1,isXml=!0,search_path="search.xml";0===search_path.length?search_path="search.xml":/json$/i.test(search_path)&&(isXml=!1);var path="/"+search_path,onPopupClose=function(t){$(".popup").hide(),$("#local-search-input").val(""),$(".search-result-list").remove(),$("#no-result").remove(),$(".local-search-pop-overlay").remove(),$("body").css("overflow","")},searchFunc=function(t,e,o){"use strict";$("body").append('<div class="search-popup-overlay local-search-pop-overlay"><div id="search-loading-icon"><i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i></div></div>').css("overflow","hidden"),$("#search-loading-icon").css("margin","20% auto 0 auto").css("text-align","center"),$.ajax({url:t,dataType:isXml?"xml":"json",async:!0,success:function(t){isfetched=!0,$(".popup").detach().appendTo(".header-inner");var n=isXml?$("entry",t).map(function(){return{title:$("title",this).text(),content:$("content",this).text(),url:$("url",this).text()}}).get():t,r=document.getElementById(e),s=document.getElementById(o),a=function(){var t=r.value.trim().toLowerCase(),e=t.split(/[\s\-]+/);e.length>1&&e.push(t);var o=[];if(t.length>0&&n.forEach(function(n){var r=!1,s=0,a=0,i=n.title.trim(),c=i.toLowerCase(),l=n.content.trim().replace(/<[^>]+>/g,""),h=l.toLowerCase(),p=decodeURIComponent(n.url),u=[],f=[];if(""!=i&&(e.forEach(function(t){function e(t,e,o){var n=t.length;if(0===n)return[];var r=0,s=[],a=[];for(o||(e=e.toLowerCase(),t=t.toLowerCase());(s=e.indexOf(t,r))>-1;)a.push({position:s,word:t}),r=s+n;return a}u=u.concat(e(t,c,!1)),f=f.concat(e(t,h,!1))}),(u.length>0||f.length>0)&&(r=!0,s=u.length+f.length)),r){[u,f].forEach(function(t){t.sort(function(t,e){return e.position!==t.position?e.position-t.position:t.word.length-e.word.length})});function d(e,o,n,r){for(var s=r[r.length-1],i=s.position,c=s.word,l=[],h=0;i+c.length<=n&&0!=r.length;){c===t&&h++,l.push({position:i,length:c.length});var p=i+c.length;for(r.pop();0!=r.length&&(s=r[r.length-1],i=s.position,c=s.word,p>i);)r.pop()}return a+=h,{hits:l,start:o,end:n,searchTextCount:h}}var g=[];0!=u.length&&g.push(d(0,0,i.length,u));for(var v=[];0!=f.length;){var $=f[f.length-1],C=$.position,m=$.word,x=C-20,w=C+80;x<0&&(x=0),w<C+m.length&&(w=C+m.length),w>l.length&&(w=l.length),v.push(d(0,x,w,f))}v.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hits.length!==e.hits.length?e.hits.length-t.hits.length:t.start-e.start});var y=parseInt("1");y>=0&&(v=v.slice(0,y));function T(t,e){var o="",n=e.start;return e.hits.forEach(function(e){o+=t.substring(n,e.position);var r=e.position+e.length;o+='<b class="search-keyword">'+t.substring(e.position,r)+"</b>",n=r}),o+=t.substring(n,e.end)}var b="";0!=g.length?b+="<li><a href='"+p+"' class='search-result-title'>"+T(i,g[0])+"</a>":b+="<li><a href='"+p+"' class='search-result-title'>"+i+"</a>",v.forEach(function(t){b+="<a href='"+p+'\'><p class="search-result">'+T(l,t)+"...</p></a>"}),b+="</li>",o.push({item:b,searchTextCount:a,hitCount:s,id:o.length})}}),1===e.length&&""===e[0])s.innerHTML='<div id="no-result"><i class="fa fa-search fa-5x" /></div>';else if(0===o.length)s.innerHTML='<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>';else{o.sort(function(t,e){return t.searchTextCount!==e.searchTextCount?e.searchTextCount-t.searchTextCount:t.hitCount!==e.hitCount?e.hitCount-t.hitCount:e.id-t.id});var a='<ul class="search-result-list">';o.forEach(function(t){a+=t.item}),a+="</ul>",s.innerHTML=a}};r.addEventListener("input",a),$(".local-search-pop-overlay").remove(),$("body").css("overflow",""),proceedsearch()}})};$(".popup-trigger").click(function(t){t.stopPropagation(),!1===isfetched?searchFunc(path,"local-search-input","local-search-result"):proceedsearch()}),$(".popup-btn-close").click(onPopupClose),$(".popup").click(function(t){t.stopPropagation()}),$(document).on("keyup",function(t){27===t.which&&$(".search-popup").is(":visible")&&onPopupClose()})</script></div></body></header></html>
